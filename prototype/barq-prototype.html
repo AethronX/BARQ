@@ -1,0 +1,537 @@
+<title>BARQ نموذج تفاعلي</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: centered phone frame on desktop, edge-to-edge on phones. Navy shell, amber used only for primary action and the lightning mark. */
+:root{
+  --navy:#0F172A; --navy-2:#1E293B; --accent:#F59E0B; --accent-ink:#1a1204;
+  --bg:#EEF2F7; --screen:#F8FAFC; --card:#FFFFFF; --fg:#0F172A; --muted:#64748B; --line:#E2E8F0;
+  --ok:#047857; --ok-bg:#D1FAE5; --warn:#92400E; --warn-bg:#FEF3C7; --info:#1D4ED8; --info-bg:#DBEAFE; --bad:#B91C1C; --bad-bg:#FEE2E2;
+  --chip:#F1F5F9; --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+  --font:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#05080F; --screen:#0B1220; --card:#131C2E; --fg:#E8EEF7; --muted:#94A3B8; --line:#243148;
+  --ok:#6EE7B7; --ok-bg:#064E3B; --warn:#FCD34D; --warn-bg:#451A03; --info:#93C5FD; --info-bg:#1E3A8A; --bad:#FCA5A5; --bad-bg:#7F1D1D;
+  --chip:#1B2740; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#05080F; --screen:#0B1220; --card:#131C2E; --fg:#E8EEF7; --muted:#94A3B8; --line:#243148;
+  --ok:#6EE7B7; --ok-bg:#064E3B; --warn:#FCD34D; --warn-bg:#451A03; --info:#93C5FD; --info-bg:#1E3A8A; --bad:#FCA5A5; --bad-bg:#7F1D1D;
+  --chip:#1B2740; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select,textarea{font:inherit;color:var(--fg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cap{max-width:430px;width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.cap b{color:var(--fg)}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:2px}
+.seg button{padding:4px 10px;border-radius:8px;font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.phone{flex:1;min-height:0;width:100%;max-width:430px;max-height:880px;background:var(--screen);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:var(--shadow)}
+@media (max-width:480px){.phone{border-radius:20px}}
+.mock{background:var(--warn-bg);color:var(--warn);font-size:11px;padding:4px 12px;text-align:center;font-weight:600}
+.top{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;min-height:56px}
+.top h1{font-size:16px;margin:0;font-weight:600;flex:1;min-width:0}
+.logo{font-family:'IBM Plex Sans',sans-serif;font-weight:700;letter-spacing:.14em;font-size:20px}
+.logo i{color:var(--accent);font-style:normal}
+.ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.08)}
+.ib svg{width:18px;height:18px}
+[dir=ltr] .rtl-flip{transform:scaleX(-1)}
+main{flex:1;overflow-y:auto;min-height:0;padding:16px;display:flex;flex-direction:column;gap:14px}
+.tabs{display:flex;background:var(--navy);padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;color:#94A3B8;font-size:11px;position:relative;min-height:48px}
+.tabs button svg{width:20px;height:20px}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.dot{position:absolute;top:4px;inset-inline-start:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.hero{background:var(--navy);color:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.hero h2{margin:0;font-size:18px}
+.hero p{margin:0;color:#CBD5E1;font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border-radius:12px;font-weight:600;width:100%}
+.btn.p{background:var(--accent);color:var(--accent-ink)}
+.btn.s{background:var(--navy);color:#fff}
+.btn.g{background:var(--chip);color:var(--fg)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn svg{width:18px;height:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:start}
+.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted)}
+h3{margin:0;font-size:15px}
+.sec{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:10px;min-width:0}
+.row.sb{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.sm{font-size:12px}
+.num{font-variant-numeric:tabular-nums;font-family:'IBM Plex Sans',sans-serif;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--chip);white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.info{background:var(--info-bg);color:var(--info)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.link{color:var(--info);font-size:12px}
+.item{cursor:pointer;text-align:start;width:100%}
+label{font-weight:600;font-size:13px;display:block;margin-bottom:6px}
+label i{color:var(--bad);font-style:normal}
+.in{width:100%;min-height:48px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px}
+.in.err{border-color:var(--bad)}
+textarea.in{min-height:96px;resize:vertical}
+.errt{color:var(--bad);font-size:12px;margin-top:4px}
+.step{display:flex;gap:8px;align-items:stretch}
+.step button{width:48px;border-radius:12px;background:var(--chip);font-size:20px}
+.step input{text-align:center;flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chipb{padding:6px 12px;border-radius:999px;background:var(--chip);font-size:12px;font-weight:600;min-height:36px}
+.chipb[aria-pressed="true"]{background:var(--navy);color:#fff}
+.price{font-size:20px;font-weight:700}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv div{background:var(--chip);border-radius:10px;padding:8px 10px;min-width:0}
+.kv small{display:block;color:var(--muted);font-size:11px}
+.kv b{font-size:13px}
+.bar{height:6px;border-radius:99px;background:var(--chip);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.score{display:grid;place-items:center;min-width:52px;height:52px;border-radius:14px;background:var(--navy);color:#fff;font-weight:700}
+.score small{font-size:9px;font-weight:500;color:#CBD5E1;display:block;line-height:1}
+.fac{display:grid;grid-template-columns:90px 1fr 34px;gap:8px;align-items:center;font-size:12px}
+.tl{display:flex;flex-direction:column;gap:0}
+.tl div{display:flex;gap:10px;padding-bottom:12px;position:relative}
+.tl div::before{content:"";position:absolute;inset-inline-start:5px;top:14px;bottom:0;width:2px;background:var(--line)}
+.tl div:last-child::before{display:none}
+.tl i{width:12px;height:12px;border-radius:50%;background:var(--line);margin-top:4px;flex:none;z-index:1}
+.tl .done i{background:var(--ok)}
+.tl .cur i{background:var(--accent);box-shadow:0 0 0 4px rgba(245,158,11,.25)}
+.tl .todo{color:var(--muted)}
+.sheetbg{position:absolute;inset:0;background:rgba(2,6,23,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:var(--card);width:100%;border-radius:20px 20px 0 0;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:85%;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.toast{position:absolute;inset-inline:16px;bottom:76px;background:var(--navy);color:#fff;padding:10px 14px;border-radius:12px;z-index:6;font-size:13px;display:flex;gap:8px;align-items:center}
+.toast::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.cmp{overflow-x:auto}
+.cmp table{border-collapse:collapse;width:100%;font-size:12px;min-width:340px}
+.cmp th,.cmp td{padding:8px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+.cmp th{color:var(--muted);font-weight:500}
+.skel{height:76px;border-radius:14px;background:linear-gradient(90deg,var(--chip),var(--card),var(--chip));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.empty{text-align:center;color:var(--muted);padding:24px 8px}
+.note{background:var(--info-bg);color:var(--info);border-radius:12px;padding:10px 12px;font-size:12px}
+</style>
+
+<div class="cap">
+  <span><b>BARQ</b> · <span id="capt"></span></span>
+  <span class="row">
+    <span class="seg" role="group" aria-label="Language"><button id="l-ar" aria-pressed="true">العربية</button><button id="l-en" aria-pressed="false">EN</button></span>
+  </span>
+</div>
+<div class="phone" id="phone"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- i18n (all UI strings live here) ---------- */
+const T={
+ar:{
+cap:'نموذج تفاعلي بيانات تجريبية',mock:'بيانات تجريبية: كل الموردين والأسعار والتقييمات والشحنات مُحاكاة وليست حقيقية',
+home:'الرئيسية',orders:'الطلبيات',alerts:'الإشعارات',back:'رجوع',
+welcome:'مرحباً بك في بارق',tag:'مناقصات أسرع، موردون أفضل، قيمة أكبر',newrfq:'طلب عرض سعر جديد',
+s_active:'طلبات نشطة',s_quotes:'عروض مستلمة',s_orders:'طلبيات',s_ship:'شحنات',
+active:'طلبات عروض الأسعار',activity:'آخر النشاطات',quotes_n:'{n} عروض',closing:'يغلق خلال',
+rfq_new:'إنشاء طلب عرض سعر',rfq_sub:'سيُرسل طلبك إلى الموردين المؤهلين في مسقط',
+f_prod:'اسم المنتج / الخدمة',f_prod_ph:'مثال: مكيفات سبليت 5 طن',f_cat:'الفئة',f_qty:'الكمية',f_unit:'الوحدة',
+f_spec:'المواصفات المطلوبة',f_spec_ph:'الماركة، الجودة، الضمان، أي متطلبات خاصة',f_loc:'موقع التسليم',f_loc_ph:'اختر الموقع',
+f_date:'مطلوب بتاريخ',f_att:'مرفقات',f_att_note:'يُسمح بـ PDF وصور وجداول، الحد 10 ميجابايت للملف',
+send:'إرسال إلى الموردين',sending:'جارٍ الإرسال…',
+e_prod:'أدخل اسم المنتج (3 أحرف على الأقل)',e_qty:'الكمية يجب أن تكون بين 1 و 100000',e_spec:'أضف مواصفات لا تقل عن 10 أحرف',e_loc:'اختر موقع التسليم',e_date:'اختر تاريخاً في المستقبل',
+privacy:'لن تظهر هويتك للموردين قبل إرساء الطلب. أسعار كل مورد سرّية عن بقية الموردين.',
+u_pcs:'قطعة',u_box:'صندوق',u_m:'متر',u_ton:'طن',
+c_hvac:'تكييف وتبريد',c_elec:'كهرباء',c_plumb:'سباكة',c_safe:'سلامة',
+l_muscat:'مسقط، السيب',l_ruwi:'مسقط، روي',l_bows:'مسقط، بوشر',l_mawa:'مسقط، المعبيلة',
+r_title:'عروض الموردين',r_ref:'رقم الطلب',r_sort:'ترتيب حسب',sort_score:'نقاط بارق',sort_price:'السعر',sort_days:'التسليم',
+rcv:'عروض',score:'نقاط بارق',why:'كيف حُسبت النقاط؟',total:'السعر الإجمالي',unit:'سعر الوحدة',days:'التسليم',day:'أيام',
+warranty:'الضمان',mo:'شهراً',terms:'شروط الدفع',ontime:'التسليم في الموعد',rating:'التقييم',orders_done:'طلبية منفذة',
+compare:'قارن',compare_btn:'مقارنة المحدد ({n})',pick:'اختر هذا المورد',picked_note:'لا يتم اختيار أي عرض تلقائياً. راجع التفاصيل ثم قرر.',
+v0:'غير موثّق',v1:'توثيق أساسي',v2:'توثيق تجاري',v3:'توثيق كامل',
+f_price:'السعر',f_deliv:'السرعة',f_rate:'التقييم',f_ont:'الالتزام',f_term:'الشروط',f_ver:'التوثيق',
+formula:'الصيغة المعلنة: السعر 35٪، السرعة 20٪، التقييم 15٪، الالتزام 15٪، التوثيق 10٪، الشروط 5٪. لا تأثير للإعلانات أو الاشتراكات.',
+lowest:'الأقل سعراً',fastest:'الأسرع',
+cf_title:'تأكيد اختيار المورد',cf_review:'راجعت السعر والمدة والشروط وأوافق على إنشاء الطلبية',cf_btn:'تأكيد وإنشاء الطلبية',cancel:'إلغاء',
+cf_note:'سيتم إنشاء طلبية واحدة فقط حتى لو ضغطت مرتين أو انقطع الاتصال.',
+o_title:'الطلبية',o_none:'لا توجد طلبيات بعد',o_none_s:'أنشئ طلب عرض سعر واختر مورداً لتظهر طلبيتك هنا.',
+os:{PENDING:'قيد الانتظار',CONFIRMED:'مؤكدة',PROCESSING:'قيد التجهيز',READY_FOR_SHIPMENT:'جاهزة للشحن',SHIPPED:'تم الشحن',DELIVERED:'تم التسليم',COMPLETED:'مكتملة'},
+o_supplier:'المورد',o_amount:'المبلغ المتفق عليه',o_pay:'حالة الدفع',pay_pending:'غير مدفوع (يُتتبع يدوياً)',
+lg_title:'التوصيل',lg_sub:'اختر طريقة التوصيل بعد تأكيد المورد',lg_sup:'توصيل المورد',lg_sup_s:'يتولى المورد التسليم بنفسه',
+lg_prov:'مزودو توصيل محليون',lg_mock:'مزودون تجريبيون وليسوا شركات حقيقية',lg_intl:'الشحن الدولي',lg_soon:'قريباً',
+cap_track:'تتبع',cap_ins:'تأمين',cap_same:'نفس اليوم',cap_pod:'إثبات التسليم',cap_cod:'دفع عند التسليم',
+choose:'اختيار',chosen:'تم الاختيار',
+t_title:'تتبع الشحنة',t_from:'من',t_to:'إلى',t_eta:'الوصول المتوقع',t_sim:'محاكاة تحديث الحالة',t_pod:'إثبات التسليم',t_pod_ok:'تم رفع صورة التسليم (تجريبي)',
+ss:{CREATED:'تم إنشاء الشحنة',PICKED_UP:'تم الاستلام من المورد',IN_TRANSIT:'في الطريق',OUT_FOR_DELIVERY:'خرجت للتسليم',DELIVERED:'تم التسليم'},
+n_title:'الإشعارات',n_none:'لا توجد إشعارات',
+n_new_quote:'وصل عرض جديد على {p}',n_selected:'تم اختيار المورد {s}',n_order:'تم تأكيد الطلبية',n_ship:'تحديث الشحنة: {x}',n_rfq:'تم نشر طلبك {p}',
+toast_rfq:'تم إرسال الطلب إلى الموردين',toast_order:'تم إنشاء الطلبية',toast_lg:'تم اختيار التوصيل',toast_max:'يمكن مقارنة 3 عروض كحد أقصى',
+cmp_title:'مقارنة العروض',close:'إغلاق',
+loading_q:'بانتظار عروض الموردين…',retry:'إعادة المحاولة',err:'تعذر التحميل. تحقق من الاتصال وحاول مرة أخرى.',
+today:'اليوم',h:'س'
+},
+en:{
+cap:'Interactive prototype · mock data',mock:'MOCK DATA: all suppliers, prices, ratings and shipments are simulated, not real',
+home:'Home',orders:'Orders',alerts:'Alerts',back:'Back',
+welcome:'Welcome to BARQ',tag:'Faster tenders, better suppliers, more value',newrfq:'New RFQ',
+s_active:'Active RFQs',s_quotes:'Quotes',s_orders:'Orders',s_ship:'Shipments',
+active:'RFQs',activity:'Recent activity',quotes_n:'{n} quotes',closing:'Closes in',
+rfq_new:'Create RFQ',rfq_sub:'Your request goes to qualified suppliers in Muscat',
+f_prod:'Product / service',f_prod_ph:'e.g. 5-ton split A/C units',f_cat:'Category',f_qty:'Quantity',f_unit:'Unit',
+f_spec:'Required specifications',f_spec_ph:'Brand, quality, warranty, special requirements',f_loc:'Delivery location',f_loc_ph:'Select location',
+f_date:'Required by',f_att:'Attachments',f_att_note:'PDF, images and spreadsheets allowed, 10 MB per file',
+send:'Send to suppliers',sending:'Sending…',
+e_prod:'Enter a product name (at least 3 characters)',e_qty:'Quantity must be between 1 and 100000',e_spec:'Add specifications (at least 10 characters)',e_loc:'Select a delivery location',e_date:'Pick a future date',
+privacy:'Your identity stays hidden from suppliers until award. Each supplier price is confidential from the others.',
+u_pcs:'Pieces',u_box:'Boxes',u_m:'Meters',u_ton:'Tons',
+c_hvac:'HVAC',c_elec:'Electrical',c_plumb:'Plumbing',c_safe:'Safety',
+l_muscat:'Muscat, Seeb',l_ruwi:'Muscat, Ruwi',l_bows:'Muscat, Bawshar',l_mawa:'Muscat, Mawaleh',
+r_title:'Supplier quotes',r_ref:'RFQ',r_sort:'Sort by',sort_score:'BARQ Score',sort_price:'Price',sort_days:'Delivery',
+rcv:'quotes',score:'BARQ Score',why:'How is the score computed?',total:'Total price',unit:'Unit price',days:'Delivery',day:'days',
+warranty:'Warranty',mo:'months',terms:'Payment terms',ontime:'On-time delivery',rating:'Rating',orders_done:'orders done',
+compare:'Compare',compare_btn:'Compare selected ({n})',pick:'Select this supplier',picked_note:'No quote is selected automatically. Review the details, then decide.',
+v0:'Unverified',v1:'Basic verified',v2:'Business verified',v3:'Fully verified',
+f_price:'Price',f_deliv:'Speed',f_rate:'Rating',f_ont:'Reliability',f_term:'Terms',f_ver:'Verification',
+formula:'Published formula: price 35%, speed 20%, rating 15%, reliability 15%, verification 10%, terms 5%. Ads and subscriptions have no effect.',
+lowest:'Lowest price',fastest:'Fastest',
+cf_title:'Confirm supplier selection',cf_review:'I reviewed price, delivery and terms and agree to create the order',cf_btn:'Confirm and create order',cancel:'Cancel',
+cf_note:'Only one order is created even if you tap twice or the connection drops.',
+o_title:'Order',o_none:'No orders yet',o_none_s:'Create an RFQ and select a supplier to see your order here.',
+os:{PENDING:'Pending',CONFIRMED:'Confirmed',PROCESSING:'Processing',READY_FOR_SHIPMENT:'Ready for shipment',SHIPPED:'Shipped',DELIVERED:'Delivered',COMPLETED:'Completed'},
+o_supplier:'Supplier',o_amount:'Agreed amount',o_pay:'Payment status',pay_pending:'Unpaid (tracked manually)',
+lg_title:'Delivery',lg_sub:'Choose how to deliver after the supplier is confirmed',lg_sup:'Supplier delivery',lg_sup_s:'The supplier delivers directly',
+lg_prov:'Local delivery providers',lg_mock:'Demo providers, not real companies',lg_intl:'International freight',lg_soon:'Coming soon',
+cap_track:'Tracking',cap_ins:'Insurance',cap_same:'Same-day',cap_pod:'Proof of delivery',cap_cod:'COD',
+choose:'Choose',chosen:'Chosen',
+t_title:'Shipment tracking',t_from:'From',t_to:'To',t_eta:'ETA',t_sim:'Simulate status update',t_pod:'Proof of delivery',t_pod_ok:'Delivery photo uploaded (demo)',
+ss:{CREATED:'Shipment created',PICKED_UP:'Picked up from supplier',IN_TRANSIT:'In transit',OUT_FOR_DELIVERY:'Out for delivery',DELIVERED:'Delivered'},
+n_title:'Notifications',n_none:'No notifications',
+n_new_quote:'New quote received on {p}',n_selected:'Supplier selected: {s}',n_order:'Order confirmed',n_ship:'Shipment update: {x}',n_rfq:'Your RFQ {p} was published',
+toast_rfq:'RFQ sent to suppliers',toast_order:'Order created',toast_lg:'Delivery option chosen',toast_max:'You can compare up to 3 quotes',
+cmp_title:'Compare quotes',close:'Close',
+loading_q:'Waiting for supplier quotes…',retry:'Retry',err:'Could not load. Check your connection and try again.',
+today:'Today',h:'h'
+}};
+let lang='ar';
+const t=(k,p)=>{let v=k.split('.').reduce((o,x)=>o&&o[x],T[lang]);if(v==null)v=k;if(p)for(const x in p)v=v.replace('{'+x+'}',p[x]);return v};
+
+/* ---------- domain: money, state machines, score ---------- */
+const baisa=n=>Math.round(n*1000);                       // money kept as integer baisa
+const omr=b=>'OMR '+(b/1000).toLocaleString('en',{minimumFractionDigits:3,maximumFractionDigits:3});
+const RFQ_FLOW={DRAFT:['PUBLISHED'],PUBLISHED:['OPEN'],OPEN:['QUOTES_RECEIVED','CANCELLED'],QUOTES_RECEIVED:['EVALUATION','CANCELLED'],EVALUATION:['AWARDED','CANCELLED'],AWARDED:['CLOSED'],CLOSED:[],CANCELLED:[]};
+const ORDER_FLOW={PENDING:['CONFIRMED','CANCELLED'],CONFIRMED:['PROCESSING','CANCELLED'],PROCESSING:['READY_FOR_SHIPMENT'],READY_FOR_SHIPMENT:['SHIPPED'],SHIPPED:['DELIVERED'],DELIVERED:['COMPLETED'],COMPLETED:[],CANCELLED:[]};
+const SHIP_ORDER=['CREATED','PICKED_UP','IN_TRANSIT','OUT_FOR_DELIVERY','DELIVERED'];
+function transition(flow,from,to){if(!(flow[from]||[]).includes(to))throw new Error('Invalid transition '+from+' -> '+to);return to}
+const W={price:.35,deliv:.20,rate:.15,ont:.15,ver:.10,term:.05};
+function scoreAll(qs){
+  const minP=Math.min(...qs.map(q=>q.unitB)),minD=Math.min(...qs.map(q=>q.days));
+  return qs.map(q=>{
+    const f={price:minP/q.unitB,deliv:minD/q.days,rate:q.rating/5,ont:q.ontime/100,ver:q.ver/3,term:q.termScore};
+    const s=Object.keys(W).reduce((a,k)=>a+W[k]*f[k],0);
+    return {...q,f,score:Math.round(s*100)};
+  });
+}
+
+/* ---------- mock data (fictional, clearly labelled) ---------- */
+const SUPPLIERS=[
+ {id:'s1',name:{ar:'بحر عُمان للتبريد (تجريبي)',en:'Bahr Oman Cooling (demo)'},ver:3,rating:4.7,ontime:96,done:128,mult:1.10,days:3,warranty:24,terms:{ar:'دفع خلال 30 يوماً',en:'Net 30'},termScore:1},
+ {id:'s2',name:{ar:'النخبة الكهروميكانيكية (تجريبي)',en:'Elite Electromech (demo)'},ver:2,rating:4.5,ontime:91,done:74,mult:1.04,days:6,warranty:12,terms:{ar:'50٪ مقدماً',en:'50% advance'},termScore:.6},
+ {id:'s3',name:{ar:'مسقط للتجهيزات الفنية (تجريبي)',en:'Muscat Technical Supply (demo)'},ver:1,rating:4.1,ontime:84,done:23,mult:1.00,days:9,warranty:12,terms:{ar:'100٪ مقدماً',en:'100% advance'},termScore:.2},
+ {id:'s4',name:{ar:'الخليج للأنظمة (تجريبي)',en:'Gulf Systems (demo)'},ver:3,rating:4.4,ontime:93,done:96,mult:1.19,days:2,warranty:36,terms:{ar:'دفع خلال 60 يوماً',en:'Net 60'},termScore:1}
+];
+const PROVIDERS=[
+ {id:'p1',name:{ar:'مزود توصيل تجريبي أ',en:'Demo Carrier A'},price:baisa(18.5),days:'1',caps:['track','ins','same','pod']},
+ {id:'p2',name:{ar:'مزود توصيل تجريبي ب',en:'Demo Carrier B'},price:baisa(14.8),days:'1-2',caps:['track','pod','cod']},
+ {id:'p3',name:{ar:'مزود توصيل تجريبي ج',en:'Demo Carrier C'},price:baisa(12.2),days:'2-3',caps:['pod']}
+];
+const uid=()=>Math.random().toString(36).slice(2,10);
+const S={
+  tab:'home',screen:'home',rfqs:[],quotes:{},order:null,notifs:[],sort:'score',cmp:[],why:null,sheet:null,toast:null,
+  form:{prod:'',cat:'c_hvac',qty:10,unit:'u_pcs',spec:'',loc:'',date:'',},errs:{},submitting:false,submitKey:null,loadingQ:false,rfqId:null,loadFail:false
+};
+// seeded example RFQs
+S.rfqs=[
+ {id:'0146',title:{ar:'أجهزة تكييف (HVAC)',en:'HVAC units'},qty:6,unit:'u_pcs',n:8,hrs:'142h',seed:true},
+ {id:'0145',title:{ar:'معدات السلامة الشخصية',en:'Personal safety equipment'},qty:200,unit:'u_pcs',n:3,hrs:'48h',seed:true}
+];
+
+/* ---------- icons ---------- */
+const I=(d,s=2)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${s}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ic={
+ home:I('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'),
+ box:I('<path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'),
+ bell:I('<path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 004 0"/>'),
+ back:I('<path d="M9 18l6-6-6-6"/>'),
+ bolt:I('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+ plus:I('<path d="M12 5v14M5 12h14"/>'),
+ check:I('<path d="M5 12l5 5 9-10"/>'),
+ truck:I('<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>')
+};
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+function notify(msg){S.notifs.unshift({id:uid(),msg,at:new Date()})}
+function toast(m){S.toast=m;render();setTimeout(()=>{if(S.toast===m){S.toast=null;render()}},2400)}
+function verPill(v){return `<span class="pill ${v>=3?'ok':v>=1?'info':'bad'}">${v>=1?'✓ ':''}${t('v'+v)}</span>`}
+function nameOf(o){return o.name[lang]||o.name.en}
+function sortedQuotes(){
+  const qs=S.quotes[S.rfqId]||[];const a=[...qs];
+  if(S.sort==='score')a.sort((x,y)=>y.score-x.score);
+  if(S.sort==='price')a.sort((x,y)=>x.totalB-y.totalB);
+  if(S.sort==='days')a.sort((x,y)=>x.days-y.days);
+  return a;
+}
+function curRfq(){return S.rfqs.find(r=>r.id===S.rfqId)}
+
+/* ---------- views ---------- */
+function topbar(title,back){
+  return `<div class="top">${back?`<button class="ib" data-act="back" aria-label="${t('back')}"><span class="rtl-flip" style="display:block">${ic.back}</span></button>`:''}
+  <h1>${esc(title)}</h1><span class="logo">BAR<i>Q</i></span></div>`;
+}
+function vHome(){
+  const nq=Object.values(S.quotes).reduce((a,x)=>a+x.length,0)+11;
+  const list=S.rfqs.map(r=>`<button class="card item" data-act="open-rfq" data-id="${r.id}">
+    <div class="row sb"><div class="grow"><b>${esc(r.title[lang]||r.title.en)}</b><div class="sm muted">RFQ #BARQ-2025-${r.id}</div></div>
+    <span class="pill warn num">${r.hrs.replace('h',' '+t('h'))}</span></div>
+    <div class="row sb sm"><span class="muted">${t('closing')}</span><span class="pill info">${t('quotes_n',{n:r.n})}</span></div></button>`).join('');
+  return `${topbar(t('welcome'))}<main>
+   <div class="hero"><h2>${t('welcome')}</h2><p>${t('tag')}</p>
+   <button class="btn p" data-act="new-rfq">${ic.plus}${t('newrfq')}</button></div>
+   <div class="stats">
+    <div class="stat"><b>${S.rfqs.length}</b><span>${t('s_active')}</span></div>
+    <div class="stat"><b>${nq}</b><span>${t('s_quotes')}</span></div>
+    <div class="stat"><b>${S.order?1:0}</b><span>${t('s_orders')}</span></div>
+    <div class="stat"><b>${S.order&&S.order.ship?1:0}</b><span>${t('s_ship')}</span></div></div>
+   <div class="sec"><h3>${t('active')}</h3>${list}</div>
+   <div class="sec"><h3>${t('activity')}</h3>${S.notifs.length?S.notifs.slice(0,3).map(n=>`<div class="card sm">${esc(n.msg)}</div>`).join(''):`<div class="empty">${t('n_none')}</div>`}</div>
+  </main>`;
+}
+function fld(id,label,inner,err){return `<div><label for="${id}">${label} <i>*</i></label>${inner}${err?`<div class="errt" role="alert">${err}</div>`:''}</div>`}
+function vNew(){
+  const f=S.form,e=S.errs;
+  const opts=(arr,sel,ph)=>(ph?`<option value="">${ph}</option>`:'')+arr.map(k=>`<option value="${k}" ${sel===k?'selected':''}>${t(k)}</option>`).join('');
+  return `${topbar(t('rfq_new'),1)}<main>
+   <p class="muted" style="margin:0">${t('rfq_sub')}</p>
+   ${fld('f-prod',t('f_prod'),`<input class="in ${e.prod?'err':''}" id="f-prod" data-f="prod" maxlength="120" placeholder="${t('f_prod_ph')}" value="${esc(f.prod)}">`,e.prod)}
+   <div><label for="f-cat">${t('f_cat')}</label><select class="in" id="f-cat" data-f="cat">${opts(['c_hvac','c_elec','c_plumb','c_safe'],f.cat)}</select></div>
+   <div class="row" style="align-items:flex-start"><div class="grow">${fld('f-qty',t('f_qty'),`<div class="step"><button type="button" data-act="qty-" aria-label="-">−</button><input class="in ${e.qty?'err':''}" id="f-qty" data-f="qty" inputmode="numeric" value="${f.qty}"><button type="button" data-act="qty+" aria-label="+">+</button></div>`,e.qty)}</div>
+   <div style="width:38%"><label for="f-unit">${t('f_unit')}</label><select class="in" id="f-unit" data-f="unit">${opts(['u_pcs','u_box','u_m','u_ton'],f.unit)}</select></div></div>
+   ${fld('f-spec',t('f_spec'),`<textarea class="in ${e.spec?'err':''}" id="f-spec" data-f="spec" maxlength="1000" placeholder="${t('f_spec_ph')}">${esc(f.spec)}</textarea><div class="sm muted num" style="text-align:end">${f.spec.length}/1000</div>`,e.spec)}
+   ${fld('f-loc',t('f_loc'),`<select class="in ${e.loc?'err':''}" id="f-loc" data-f="loc">${opts(['l_muscat','l_ruwi','l_bows','l_mawa'],f.loc,t('f_loc_ph'))}</select>`,e.loc)}
+   ${fld('f-date',t('f_date'),`<input type="date" class="in ${e.date?'err':''}" id="f-date" data-f="date" value="${f.date}">`,e.date)}
+   <div><label>${t('f_att')}</label><div class="card sm muted">${t('f_att_note')}</div></div>
+   <div class="note">${t('privacy')}</div>
+   <button class="btn p" data-act="submit-rfq" ${S.submitting?'disabled':''}>${ic.bolt}${S.submitting?t('sending'):t('send')}</button>
+  </main>`;
+}
+function qCard(q,best){
+  const sel=S.cmp.includes(q.id);
+  const flags=[];if(q.totalB===best.minP)flags.push(`<span class="pill ok">${t('lowest')}</span>`);if(q.days===best.minD)flags.push(`<span class="pill info">${t('fastest')}</span>`);
+  const open=S.why===q.id;
+  const fac=['price','deliv','rate','ont','term','ver'].map(k=>`<div class="fac"><span>${t('f_'+({price:'price',deliv:'deliv',rate:'rate',ont:'ont',term:'term',ver:'ver'}[k]))}</span><div class="bar"><span style="width:${Math.round(q.f[k]*100)}%"></span></div><span class="num">${Math.round(q.f[k]*100)}</span></div>`).join('');
+  return `<div class="card">
+   <div class="row"><div class="grow"><b>${esc(nameOf(q))}</b><div class="row sm" style="flex-wrap:wrap;gap:6px">${verPill(q.ver)}<span class="muted num">★ ${q.rating.toFixed(1)}</span><span class="muted">${q.done} ${t('orders_done')}</span></div></div>
+   <div class="score" title="${t('score')}"><div style="text-align:center"><span class="num">${q.score}</span><small>${t('score')}</small></div></div></div>
+   <div class="row sb"><div><div class="sm muted">${t('total')}</div><div class="price num">${omr(q.totalB)}</div><div class="sm muted num">${t('unit')}: ${omr(q.unitB)}</div></div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${flags.join('')}</div></div>
+   <div class="kv"><div><small>${t('days')}</small><b class="num">${q.days} ${t('day')}</b></div><div><small>${t('warranty')}</small><b class="num">${q.warranty} ${t('mo')}</b></div>
+   <div><small>${t('terms')}</small><b>${esc(q.terms[lang])}</b></div><div><small>${t('ontime')}</small><b class="num">${q.ontime}%</b></div></div>
+   <button class="link" data-act="why" data-id="${q.id}" aria-expanded="${open}">${t('why')}</button>
+   ${open?`<div class="sec">${fac}<div class="sm muted">${t('formula')}</div></div>`:''}
+   <div class="row"><label class="row sm" style="margin:0;font-weight:500"><input type="checkbox" data-act="cmp" data-id="${q.id}" ${sel?'checked':''} style="width:20px;height:20px"> ${t('compare')}</label>
+   <button class="btn s grow" data-act="pick" data-id="${q.id}" style="width:auto">${t('pick')}</button></div></div>`;
+}
+function vRfq(){
+  const r=curRfq();const qs=S.quotes[S.rfqId];
+  let body;
+  if(S.loadFail)body=`<div class="empty">${t('err')}<br><br><button class="btn g" data-act="retry">${t('retry')}</button></div>`;
+  else if(S.loadingQ||!qs)body=`<div class="note">${t('loading_q')}</div><div class="skel"></div><div class="skel"></div><div class="skel"></div>`;
+  else{
+    const list=sortedQuotes();const best={minP:Math.min(...qs.map(q=>q.totalB)),minD:Math.min(...qs.map(q=>q.days))};
+    body=`<div class="row sb"><span class="sm muted">${t('r_sort')}</span><div class="chips">${['score','price','days'].map(k=>`<button class="chipb" data-act="sort" data-k="${k}" aria-pressed="${S.sort===k}">${t('sort_'+k)}</button>`).join('')}</div></div>
+    <div class="note">${t('picked_note')}</div>${list.map(q=>qCard(q,best)).join('')}
+    ${S.cmp.length>=2?`<button class="btn p" data-act="open-cmp">${t('compare_btn',{n:S.cmp.length})}</button>`:''}`;
+  }
+  return `${topbar(t('r_title'),1)}<main>
+   <div class="card"><div class="row sb"><div class="grow"><b>${esc(r?(r.title[lang]||r.title.en):'')}</b><div class="sm muted num">${t('r_ref')} #BARQ-2025-${S.rfqId}</div></div><span class="pill info">${qs?qs.length:0} ${t('rcv')}</span></div></div>${body}</main>`;
+}
+function vOrder(){
+  const o=S.order;
+  if(!o)return `${topbar(t('o_title'))}<main><div class="empty"><b>${t('o_none')}</b><p>${t('o_none_s')}</p><button class="btn s" data-act="new-rfq">${t('newrfq')}</button></div></main>`;
+  const steps=Object.keys(ORDER_FLOW).filter(k=>k!=='CANCELLED');const idx=steps.indexOf(o.status);
+  const tl=steps.map((s,i)=>`<div class="${i<idx?'done':i===idx?'cur':'todo'}"><i></i><span>${t('os.'+s)}</span></div>`).join('');
+  let lg='';
+  if(!o.lg){
+    lg=`<div class="sec"><h3>${t('lg_title')}</h3><p class="muted sm" style="margin:0">${t('lg_sub')}</p>
+    <div class="card"><div class="row"><div class="grow"><b>${t('lg_sup')}</b><div class="sm muted">${t('lg_sup_s')}</div></div><button class="btn g" style="width:auto" data-act="lg" data-id="supplier">${t('choose')}</button></div></div>
+    <div class="row sb"><b class="sm">${t('lg_prov')}</b><span class="pill warn">${t('lg_mock')}</span></div>
+    ${PROVIDERS.map(p=>`<div class="card"><div class="row"><div class="grow"><b>${esc(nameOf(p))}</b><div class="chips" style="margin-top:4px">${p.caps.map(c=>`<span class="pill">${t('cap_'+c)}</span>`).join('')}</div></div>
+    <div style="text-align:end"><div class="num"><b>${omr(p.price)}</b></div><div class="sm muted num">${p.days} ${t('day')}</div></div></div>
+    <button class="btn g" data-act="lg" data-id="${p.id}">${t('choose')}</button></div>`).join('')}
+    <div class="card row sb" style="opacity:.7"><b>${t('lg_intl')}</b><span class="pill">${t('lg_soon')}</span></div></div>`;
+  }else lg=vShip(o);
+  return `${topbar(t('o_title'))}<main>
+   <div class="card"><div class="row sb"><b class="num">ORD-${o.id}</b><span class="pill ok">${t('os.'+o.status)}</span></div>
+   <div class="kv"><div><small>${t('o_supplier')}</small><b>${esc(nameOf(o.sup))}</b></div><div><small>${t('o_amount')}</small><b class="num">${omr(o.totalB)}</b></div>
+   <div><small>${t('o_pay')}</small><b>${t('pay_pending')}</b></div><div><small>${t('days')}</small><b class="num">${o.sup.days} ${t('day')}</b></div></div>
+   <div class="tl">${tl}</div></div>${lg}</main>`;
+}
+function vShip(o){
+  const sh=o.ship;const idx=SHIP_ORDER.indexOf(sh.status);
+  const tl=SHIP_ORDER.map((s,i)=>`<div class="${i<idx?'done':i===idx?'cur':'todo'}"><i></i><span>${t('ss.'+s)}</span></div>`).join('');
+  return `<div class="sec"><h3>${t('t_title')}</h3><div class="note">${t('lg_mock')}</div>
+   <div class="card"><div class="row sb"><b>${esc(sh.carrier)}</b><span class="pill info">${t('ss.'+sh.status)}</span></div>
+   <div class="kv"><div><small>${t('t_from')}</small><b>${esc(nameOf(o.sup))}</b></div><div><small>${t('t_to')}</small><b>${esc(t(o.loc))}</b></div></div>
+   <div class="tl">${tl}</div>
+   ${sh.status==='DELIVERED'?`<div class="pill ok">${t('t_pod')}: ${t('t_pod_ok')}</div>`:`<button class="btn s" data-act="advance">${ic.truck}${t('t_sim')}</button>`}</div></div>`;
+}
+function vAlerts(){
+  return `${topbar(t('n_title'))}<main>${S.notifs.length?S.notifs.map(n=>`<div class="card sm row"><span class="pill warn">${ic.bolt.replace('<svg','<svg width="12" height="12"')}</span><span class="grow">${esc(n.msg)}</span></div>`).join(''):`<div class="empty">${t('n_none')}</div>`}</main>`;
+}
+function vSheet(){
+  if(!S.sheet)return '';
+  if(S.sheet.type==='confirm'){
+    const q=S.sheet.q;
+    return `<div class="sheetbg" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-label="${t('cf_title')}">
+     <h3>${t('cf_title')}</h3>
+     <div class="kv"><div><small>${t('o_supplier')}</small><b>${esc(nameOf(q))}</b></div><div><small>${t('total')}</small><b class="num">${omr(q.totalB)}</b></div>
+     <div><small>${t('days')}</small><b class="num">${q.days} ${t('day')}</b></div><div><small>${t('terms')}</small><b>${esc(q.terms[lang])}</b></div></div>
+     <label class="row" style="font-weight:500"><input type="checkbox" id="cf-ok" data-act="cf-ok" ${S.sheet.ok?'checked':''} style="width:22px;height:22px;flex:none"> <span>${t('cf_review')}</span></label>
+     <div class="sm muted">${t('cf_note')}</div>
+     <button class="btn p" data-act="confirm" ${S.sheet.ok&&!S.sheet.busy?'':'disabled'}>${ic.check}${t('cf_btn')}</button>
+     <button class="btn g" data-act="sheet-close">${t('cancel')}</button></div></div>`;
+  }
+  if(S.sheet.type==='cmp'){
+    const qs=S.cmp.map(id=>(S.quotes[S.rfqId]||[]).find(q=>q.id===id)).filter(Boolean);
+    const rows=[[t('score'),q=>`<b class="num">${q.score}</b>`],[t('total'),q=>`<b class="num">${omr(q.totalB)}</b>`],[t('unit'),q=>`<span class="num">${omr(q.unitB)}</span>`],
+     [t('days'),q=>`<span class="num">${q.days} ${t('day')}</span>`],[t('rating'),q=>`<span class="num">★ ${q.rating.toFixed(1)}</span>`],[t('ontime'),q=>`<span class="num">${q.ontime}%</span>`],
+     [t('warranty'),q=>`<span class="num">${q.warranty} ${t('mo')}</span>`],[t('terms'),q=>esc(q.terms[lang])],['',q=>verPill(q.ver)]];
+    return `<div class="sheetbg" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true"><h3>${t('cmp_title')}</h3>
+     <div class="cmp"><table><thead><tr><th></th>${qs.map(q=>`<th>${esc(nameOf(q))}</th>`).join('')}</tr></thead><tbody>
+     ${rows.map(r=>`<tr><th>${r[0]}</th>${qs.map(q=>`<td>${r[1](q)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+     <button class="btn g" data-act="sheet-close">${t('close')}</button></div></div>`;
+  }
+  return '';
+}
+function tabs(){
+  const b=(k,i,l,dot)=>`<button data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''}>${ic[i]}<span>${l}</span>${dot?'<span class="dot"></span>':''}</button>`;
+  return `<nav class="tabs" aria-label="Main">${b('home','home',t('home'))}${b('orders','box',t('orders'))}${b('alerts','bell',t('alerts'),S.notifs.length)}</nav>`;
+}
+function render(){
+  const scr={home:vHome,new:vNew,rfq:vRfq,orders:vOrder,alerts:vAlerts}[S.screen]();
+  const keep=document.activeElement&&document.activeElement.id;const sel=document.activeElement&&document.activeElement.selectionStart;
+  const mainTop=$('main')?$('main').scrollTop:0;
+  $('#phone').innerHTML=`<div class="mock">${t('mock')}</div>${scr}${tabs()}${vSheet()}${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}`;
+  if($('main'))$('main').scrollTop=mainTop;
+  if(keep&&$('#'+keep)){const el=$('#'+keep);el.focus();try{if(sel!=null&&el.setSelectionRange)el.setSelectionRange(sel,sel)}catch(_){}}
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  $('#capt').textContent=t('cap');$('#l-ar').setAttribute('aria-pressed',lang==='ar');$('#l-en').setAttribute('aria-pressed',lang==='en');
+}
+
+/* ---------- actions ---------- */
+function validate(){
+  const f=S.form,e={};
+  if(f.prod.trim().length<3)e.prod=t('e_prod');
+  const q=Number(f.qty);if(!Number.isInteger(q)||q<1||q>100000)e.qty=t('e_qty');
+  if(f.spec.trim().length<10)e.spec=t('e_spec');
+  if(!f.loc)e.loc=t('e_loc');
+  if(!f.date||new Date(f.date)<=new Date(new Date().toDateString()))e.date=t('e_date');
+  return e;
+}
+function genQuotes(rfqId,qty,seed){
+  const base=baisa(430+(qty%7)*3);                  // mock unit price in baisa
+  const raw=SUPPLIERS.map((s,i)=>({id:rfqId+'-'+s.id,supId:s.id,name:s.name,ver:s.ver,rating:s.rating,ontime:s.ontime,done:s.done,
+    unitB:Math.round(base*s.mult/10)*10,days:s.days,warranty:s.warranty,terms:s.terms,termScore:s.termScore}));
+  return scoreAll(raw.map(q=>({...q,totalB:q.unitB*qty})));
+}
+function submitRfq(){
+  if(S.submitting)return;                      // double-tap guard
+  S.errs=validate();
+  if(Object.keys(S.errs).length){render();const first=document.querySelector('.in.err');if(first)first.focus();return}
+  S.submitting=true;S.submitKey=S.submitKey||uid();render();
+  const key=S.submitKey;
+  setTimeout(()=>{
+    if(S.rfqs.some(r=>r.key===key)){S.submitting=false;return}   // idempotent on same key
+    const id=String(Math.floor(147+S.rfqs.length));
+    const rfq={id,key,title:{ar:S.form.prod,en:S.form.prod},qty:Number(S.form.qty),unit:S.form.unit,n:0,hrs:'72h'};
+    S.rfqs.unshift(rfq);S.rfqId=id;S.submitting=false;S.submitKey=null;S.loadingQ=true;S.loadFail=false;S.screen='rfq';S.tab='home';
+    notify(t('n_rfq',{p:'#BARQ-2025-'+id}));toast(t('toast_rfq'));
+    setTimeout(()=>{S.quotes[id]=genQuotes(id,rfq.qty);rfq.n=S.quotes[id].length;S.loadingQ=false;notify(t('n_new_quote',{p:'#BARQ-2025-'+id}));render()},1400);
+  },900);
+}
+function openRfq(id){
+  S.rfqId=id;S.screen='rfq';S.cmp=[];S.why=null;
+  const r=curRfq();
+  if(!S.quotes[id]){S.quotes[id]=genQuotes(id,r.qty);if(r.seed)r.n=S.quotes[id].length}
+  render();
+}
+function confirmPick(){
+  const sh=S.sheet;if(!sh||!sh.ok||sh.busy||S.order)return;sh.busy=true;render();
+  setTimeout(()=>{
+    if(S.order){S.sheet=null;render();return}      // never create two orders
+    const q=sh.q;const r=curRfq();
+    let st='PENDING';st=transition(ORDER_FLOW,st,'CONFIRMED');
+    S.order={id:String(Date.now()).slice(-6),status:st,sup:q,totalB:q.totalB,loc:S.form.loc||'l_muscat',lg:null,ship:null};
+    S.sheet=null;S.screen='orders';S.tab='orders';
+    notify(t('n_selected',{s:nameOf(q)}));notify(t('n_order'));toast(t('toast_order'));render();
+  },700);
+}
+function chooseLg(id){
+  const o=S.order;if(!o||o.lg)return;
+  const p=PROVIDERS.find(x=>x.id===id);
+  o.lg=id;o.status=transition(ORDER_FLOW,transition(ORDER_FLOW,o.status,'PROCESSING'),'READY_FOR_SHIPMENT');
+  o.ship={status:'CREATED',carrier:p?nameOf(p):t('lg_sup')};
+  toast(t('toast_lg'));render();
+}
+function advance(){
+  const o=S.order;if(!o||!o.ship)return;const i=SHIP_ORDER.indexOf(o.ship.status);if(i>=SHIP_ORDER.length-1)return;
+  o.ship.status=SHIP_ORDER[i+1];
+  if(o.ship.status==='PICKED_UP')o.status=transition(ORDER_FLOW,o.status,'SHIPPED');
+  if(o.ship.status==='DELIVERED')o.status=transition(ORDER_FLOW,o.status,'DELIVERED');
+  notify(t('n_ship',{x:t('ss.'+o.ship.status)}));render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',ev=>{
+  const el=ev.target.closest('[data-act]');if(!el||!$('#phone').contains(el)&&el.id!=='x')return;
+  const a=el.dataset.act,id=el.dataset.id;
+  if(el.type==='checkbox'&&a!=='cmp'&&a!=='cf-ok')return;
+  switch(a){
+   case'tab':S.tab=el.dataset.k;S.screen=S.tab;break;
+   case'back':S.screen=S.screen==='new'||S.screen==='rfq'?'home':'home';S.tab='home';break;
+   case'new-rfq':S.screen='new';S.errs={};break;
+   case'qty+':S.form.qty=Math.min(100000,(Number(S.form.qty)||0)+1);break;
+   case'qty-':S.form.qty=Math.max(1,(Number(S.form.qty)||2)-1);break;
+   case'submit-rfq':return submitRfq();
+   case'open-rfq':return openRfq(id);
+   case'sort':S.sort=el.dataset.k;break;
+   case'why':S.why=S.why===id?null:id;break;
+   case'cmp':{
+     if(el.checked){if(S.cmp.length>=3){el.checked=false;return toast(t('toast_max'))}S.cmp.push(id)}else S.cmp=S.cmp.filter(x=>x!==id);break}
+   case'open-cmp':S.sheet={type:'cmp'};break;
+   case'pick':{const q=(S.quotes[S.rfqId]||[]).find(x=>x.id===id);if(S.order){S.screen='orders';S.tab='orders';break}S.sheet={type:'confirm',q,ok:false};break}
+   case'cf-ok':S.sheet.ok=el.checked;break;
+   case'confirm':return confirmPick();
+   case'sheet-close':S.sheet=null;break;
+   case'sheet-bg':if(ev.target===el)S.sheet=null;else return;break;
+   case'lg':return chooseLg(id);
+   case'advance':return advance();
+   case'retry':S.loadFail=false;break;
+  }
+  render();
+});
+document.addEventListener('input',ev=>{
+  const f=ev.target.dataset&&ev.target.dataset.f;if(!f)return;
+  S.form[f]=ev.target.value;if(S.errs[f]){delete S.errs[f]}
+  if(f==='spec'){render()}
+});
+document.addEventListener('change',ev=>{const f=ev.target.dataset&&ev.target.dataset.f;if(f){S.form[f]=ev.target.value;if(S.errs[f])delete S.errs[f];render()}});
+$('#l-ar').onclick=()=>{lang='ar';render()};
+$('#l-en').onclick=()=>{lang='en';render()};
+try{if(new URLSearchParams(location.search).get('lang')==='en')lang='en'}catch(_){}
+render();
+})();
+</script>
