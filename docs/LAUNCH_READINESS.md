@@ -12,7 +12,7 @@ _Status as of 2026-10-08. The software MVP is built; the product is **not yet la
 | Auth | Email one-time code (no passwords); session stored in the device keychain (SecureStore, chunked) |
 | Buyer | Onboarding, create RFQ (idempotent), RFQ list with live countdown, quote comparison with BARQ Score (price, speed, verification, terms; no invented ratings), award with explicit confirmation, cancel RFQ, order tracking, confirm receipt |
 | Supplier | Onboarding with categories, inbox of matching RFQs (buyer identity hidden until award), submit / revise (max 5 versions, full history kept) / withdraw quote, fulfilment steps (processing → ready → shipped → delivered) with notes |
-| Admin | Overview counts, company verification (levels 0–3 with reason, audited), audit log viewer, deletion requests arrive as notifications |
+| Admin | Overview counts, platform statistics (GMV, daily activity, funnel, marketplace health, demand by category, verification mix, supplier leaderboard), company verification (levels 0–3 with reason, audited), company editing, role changes, order/RFQ status override, reversible removal with restore, permanent purge (refused while orders exist), profile anonymisation, append-only audit log viewer, deletion requests arrive as notifications |
 | Trust controls | Unverified companies cannot publish RFQs or quote; 20 RFQs/day/company limit; one order per RFQ; suppliers never see each other's prices; buyer identity hidden before award |
 | Notifications | In-app list, unread badges, live updates via Realtime |
 | App store requirements | In-app account deletion request (completed by admin per retention policy) |
@@ -20,6 +20,7 @@ _Status as of 2026-10-08. The software MVP is built; the product is **not yet la
 
 ## 2. Verified
 
+- **Admin powers** (applied 2026-10-08): non-admins blocked from `admin_stats` and `admin_set_role`; an admin cannot demote themselves; a reason under 5 characters is rejected; the audit log refuses UPDATE even for an admin; soft delete hides an RFQ from its own buyer and restore brings it back; both actions land in the audit log with the reason. Statistics verified against the live demo data.
 - **Permission scenario** (`supabase/tests/rls_scenario.sql`), 58 checks over 6 simulated users (buyer, 3 suppliers, unrelated buyer, admin). Covers cross-company isolation, hidden buyer identity, idempotent RFQ creation and award, the state machine (skipped and backward steps rejected), direct table writes denied, anonymous access denied, and admin-only verification and audit. All pass after fixing 2 test-expectation errors (and making the invalid-role check explicit).
 - Supabase security advisor: no missing-RLS findings. The only warnings are the 12 business functions being callable by signed-in users. That is intentional (they are the API) and each checks the caller.
 - Mobile: strict TypeScript passes; 5 domain unit tests pass; iOS and Android production bundles build; sign-in and error states render (screenshot check).
@@ -39,6 +40,8 @@ _Status as of 2026-10-08. The software MVP is built; the product is **not yet la
 | B8 | **Store accounts & builds** | You | Apple Developer (USD 99/yr) and Google Play (USD 25 once); app icon/splash with BARQ brand (currently Expo defaults); `eas build` + store listings + screenshots. |
 | B9 | **Supabase plan** | You | Free plan pauses inactive projects and has no backups. Use Pro (≈USD 25/month) before launch for daily backups and no pausing. |
 | B11 | **Remove demo mode, test sign-in & test accounts** | You + me | Demo mode embeds the test passwords in the app bundle. Set `EXPO_PUBLIC_DEMO_MODE=false` and `EXPO_PUBLIC_TEST_LOGIN=false`, remove the `EXPO_PUBLIC_DEMO_*` values, and change or delete the test accounts **before any real company signs up**. Then delete the `*@test.barq.om` users and their TEST companies (they are marked `test_account` in user metadata and `test_account.created` in the audit log). |
+| B12 | **Apply `supabase/migrations/MANUAL_20261008000006b_purge_and_anonymize.sql`** | You (Supabase SQL editor, 1 min) | The permanent company purge and the profile anonymiser could not be applied through the connector, which holds any DELETE for human confirmation. Until it is run, those two admin actions error; everything else works. |
+| B13 | **Leaked-password protection** | You (Supabase dashboard) | Auth → Passwords: enable the HaveIBeenPwned check. Flagged by the security advisor; it matters as long as any password login exists. |
 | B10 | **Retention & deletion policy** | Counsel + Ops | Decide what happens to RFQs/orders when a user asks for deletion (anonymise vs keep for N years). |
 
 ## 4. Deferred (post-MVP backlog, by design)
