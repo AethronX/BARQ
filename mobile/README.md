@@ -138,3 +138,29 @@ Android needs nothing.
 
 Both paths embed the public `.env` values, including the demo test accounts, so
 treat the link as internal until launch blocker B11 is done.
+
+### iOS specifically
+
+An iPhone cannot install an app from outside the App Store without a paid
+**Apple Developer Program** membership (USD 99 per year, an Apple contract in
+BARQ's name). There is no free route onto a physical iPhone: a free Apple ID
+only signs apps from Xcode on a Mac, and they expire after 7 days. Until that
+membership exists, iPhone users open BARQ through Expo Go (level 1 above),
+which needs no laptop and no shared network.
+
+Once the membership is active, from the `mobile` folder:
+
+```bash
+eas device:create     # registers the iPhone's UDID — once per device
+npm run build:ios     # ad-hoc build for the registered devices
+```
+
+EAS asks for the Apple ID, creates the certificate and provisioning profile
+itself, and prints an install link to open in Safari on the registered iPhone.
+Only devices registered beforehand can install that build; adding a device
+later needs a new build. `npm run publish` then updates the installed app over
+the air, with no rebuild.
+
+`ios.bundleIdentifier` is `om.barq.app`. It is permanent once an app with it is
+uploaded to App Store Connect, so change it now if BARQ should ship under a
+different identifier.

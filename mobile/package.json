@@ -36,7 +36,8 @@
     "start:tunnel": "expo start --tunnel -c",
     "publish": "eas update --branch main --message \"BARQ update\"",
     "build:android": "eas build --platform android --profile preview",
-    "build:ios": "eas build --platform ios --profile preview"
+    "build:ios": "eas build --platform ios --profile preview",
+    "device:ios": "eas device:create"
   },
   "private": true
 }

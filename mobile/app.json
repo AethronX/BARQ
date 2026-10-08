@@ -8,7 +8,11 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "userInterfaceStyle": "light"
+      "userInterfaceStyle": "light",
+      "bundleIdentifier": "om.barq.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +23,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "userInterfaceStyle": "light",
-      "backgroundColor": "#F8FAFC"
+      "backgroundColor": "#F8FAFC",
+      "package": "om.barq.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",
