@@ -34,7 +34,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types src/domain/__tests__/*.test.ts",
     "start:tunnel": "expo start --tunnel -c",
-    "publish": "eas update --branch main --message \"BARQ update\""
+    "publish": "eas update --branch main --message \"BARQ update\"",
+    "build:android": "eas build --platform android --profile preview",
+    "build:ios": "eas build --platform ios --profile preview"
   },
   "private": true
 }

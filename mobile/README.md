@@ -102,3 +102,39 @@ that is ever revisited:
   text over the navy header.
 
 The navy surfaces (header, tab bar, hero) are brand colour, not a dark theme.
+
+## Opening the app without the laptop
+
+Two levels, and only the second is a real app on the phone.
+
+### 1. Expo Go, over the internet (no build, ~2 min)
+
+Publishing an update makes the project openable from the Expo Go "Projects"
+list on any phone signed into the same Expo account, with no dev server and no
+shared Wi-Fi:
+
+```bash
+npm install -g eas-cli
+eas login            # the Expo account is yours; this cannot be done for you
+eas init             # writes extra.eas.projectId into app.json — commit it
+npm run publish      # eas update --branch main
+```
+
+The phone needs the Expo Go app and a one-time sign-in to the same account.
+
+### 2. A standalone install (the real answer)
+
+`npm run build:android` produces an **APK** you install once; after that BARQ
+is an ordinary app with its own icon, opened from the home screen with no Expo
+Go, no laptop and no network sharing. Later `npm run publish` ships updates to
+it over the air, because the build carries channel `main`.
+
+```bash
+npm run build:android    # EAS builds in the cloud, prints a download link
+```
+
+iOS needs an Apple Developer account (USD 99/yr) before `npm run build:ios`;
+Android needs nothing.
+
+Both paths embed the public `.env` values, including the demo test accounts, so
+treat the link as internal until launch blocker B11 is done.

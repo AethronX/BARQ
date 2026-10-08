@@ -6,10 +6,17 @@
   "build": {
     "preview": {
       "distribution": "internal",
-      "channel": "main"
+      "channel": "main",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
     },
     "production": {
-      "channel": "production"
+      "channel": "production",
+      "autoIncrement": true
     }
   },
   "submit": {
