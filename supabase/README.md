@@ -6,6 +6,9 @@ Project: `barq-mvp` · ref `hinnkdiedsslnvdtyywy` · region `ap-south-1`.
 - `migrations/` — applied in filename order. Already applied to `barq-mvp`; never edit an applied file, add a new one.
 - `tests/rls_scenario.sql` — end-to-end permission test. It runs in a transaction and rolls back (paste into the SQL editor or `psql -f`). Every row must show `pass = true`.
 
+## Demo data (internal testing)
+`seed/demo_data.sql` adds TEST companies, RFQs in every state, competing and revised quotes, orders at each stage, notifications and audit entries for the three test accounts. It is already applied to `barq-mvp` and is safe to re-run (it skips if present). Remove it together with the test accounts before launch (LAUNCH_READINESS B11).
+
 ## Security model
 - RLS on every table. The `authenticated` role can only `SELECT`. `anon` has no access.
 - All writes go through `SECURITY DEFINER` functions in `public` that check `auth.uid()`, role, company and state, then write `audit_log` and `notifications`.
