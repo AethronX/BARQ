@@ -33,6 +33,13 @@ test('cheapest unverified quote does not automatically win the BARQ Score', () =
   assert.ok(verified.score <= 100 && cheap.score >= 0);
 });
 
+test('missing history is excluded, not invented', () => {
+  const [q] = scoreQuotes([{ unitPrice: 1000, maxDays: 3, rating: null, onTimeRate: null, verification: 3 as const, termsScore: 1 }]);
+  assert.equal(q.factors.rating, null);
+  assert.equal(q.factors.reliability, null);
+  assert.equal(q.score, 100); // all remaining factors are maximal
+});
+
 test('RFQ validation reports each invalid field', () => {
   const today = new Date(2026, 9, 8);
   const ok = { product: 'Split AC 5 ton', category: 'c_hvac', quantity: '10', unit: 'u_pcs', spec: 'Inverter, R410A, 3 year warranty', location: 'l_seeb', requiredBy: '2026-10-15' };

@@ -1,9 +1,10 @@
 # BARQ
 
-Oman-focused B2B procurement and logistics marketplace (RFQ → competing quotes → order → delivery). **Status:** clickable prototype + Expo mobile app on mock data. Not production-ready.
+Oman-focused B2B procurement and logistics marketplace (RFQ → competing quotes → order → delivery). **Status:** MVP software built (Expo app + Supabase backend). Not launch-ready until the blockers in [docs/LAUNCH_READINESS.md](docs/LAUNCH_READINESS.md) are closed.
 
 ## Try it
 - Mobile app (Expo Go): see [mobile/README.md](mobile/README.md)
+- Backend (Supabase schema, permissions, tests): see [supabase/README.md](supabase/README.md)
 - HTML prototype: `prototype/barq-prototype.html`; stakeholder edition: `prototype/barq-stakeholders.html` (built by `prototype/build-stakeholders.py`)
 
 ## Docs

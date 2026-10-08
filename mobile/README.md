@@ -1,15 +1,16 @@
 # BARQ mobile (Expo)
 
-Arabic-first React Native app for the BARQ buyer flow, running on **mock data** (no backend yet).
+Arabic-first React Native app for BARQ, connected to the Supabase backend in `../supabase`.
 
-- Expo SDK 57 · React Native 0.86 · Expo Router · strict TypeScript
+- Expo SDK 57 · React Native 0.86 · Expo Router · strict TypeScript · React Query · supabase-js
 - Runs in **Expo Go** (no custom native modules)
-- Arabic (RTL) by default, English from the **More** tab; language switches live
+- Roles: buyer, supplier and admin, each with its own tabs; access is enforced by the database, not the app
 
-## Run it on your phone with Expo Go
+## Before the first sign-in (one time, Supabase dashboard)
+Edit the **Magic Link** and **Confirm signup** email templates to include `{{ .Token }}`. Copy the text from `docs/LAUNCH_READINESS.md` §5. Without this step users get a link instead of the 6-digit code.
 
-1. Install **Expo Go** from the App Store / Google Play. It must support **SDK 57**, so update it if it is older.
-2. On your computer (Node.js 20.19+ or 22+, Git):
+## Run on your phone with Expo Go
+Install **Expo Go** (it must support **SDK 57**), then on a computer with Node.js 22 and Git:
 
 ```bash
 git clone https://github.com/AethronX/BARQ.git
@@ -20,16 +21,19 @@ npm install
 npx expo start
 ```
 
-3. Scan the QR code: with the iPhone **Camera** app, or from inside **Expo Go** on Android.
+Scan the QR code: with the iPhone Camera, or from inside Expo Go on Android. If the phone can't reach the computer, run `npx expo start --tunnel`.
 
-If the phone and the computer are on different networks (or the office Wi-Fi blocks local traffic), use a tunnel instead:
+## Trying the full flow
+1. Sign in with email A and choose **Buyer**.
+2. On a second phone (or after signing out), sign in with email B and choose **Supplier**. Pick the same category.
+3. Make an admin account (`supabase/README.md`), sign in with it, and verify both companies in **Companies**.
+4. Buyer: create an RFQ. Supplier: it appears in the inbox; submit a quote. Buyer: compare, then accept.
+5. Supplier: move the order through processing → shipped → delivered. Buyer: confirm receipt.
 
-```bash
-npx expo start --tunnel
-```
+## Configuration
+`.env` holds only **public** values (Supabase URL and publishable key). Data access is limited by RLS, so this key is safe in the app. Never add a service-role key or any secret here. See `.env.example`.
 
-## Useful commands
-
+## Commands
 ```bash
 npm run typecheck   # TypeScript, strict
 npm test            # domain unit tests (money, state machines, BARQ Score, validation)
@@ -37,19 +41,13 @@ npx expo start -c   # start with a cleared bundler cache
 ```
 
 ## Structure
-
 ```
 src/
-  app/          Expo Router screens (tabs: home, rfqs, orders, alerts, more; rfq/new, rfq/[id], delivery, international, track)
-  domain/       framework-free rules: money (integer baisa), state machines, BARQ Score, validation (+ tests)
-  data/mock.ts  fictional companies and prices (IS_MOCK); replace with the API client later
-  state/        in-memory store with idempotent create actions
-  i18n/         all strings (ar/en) + provider
-  ui/           design tokens and shared components
+  app/        routes: sign-in, verify, onboarding, buyer/*, supplier/*, admin/*, order/[id]
+  api/        supabase client (keychain session), typed queries/mutations, error mapping
+  auth/       session + profile provider
+  domain/     framework-free rules: money (integer baisa), state machines, BARQ Score, validation (+ tests)
+  screens/    shared screens (alerts, orders, settings, role guard, tab bar)
+  i18n/       all strings (ar/en)
+  ui/         design tokens and components
 ```
-
-## What is real and what is not
-
-- All companies, prices, ratings and shipments are **fictional**; every screen shows a demo banner.
-- No server, login, payments or real carrier integration. Data resets when the app closes.
-- Security rules (authorization, tenant isolation, file scanning) must live on the future backend; nothing in this app is a security boundary.

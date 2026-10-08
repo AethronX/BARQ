@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useI18n } from '../i18n/I18nProvider';
-import type { LogoSpec } from '../data/mock';
 import { Btn, Card, CompanyLogo, Ribbon, Stars, T, Num } from './components';
 import { Icon, VerifiedBadge, type IconName } from './Icon';
 import { colors } from './theme';
@@ -14,11 +13,10 @@ import { colors } from './theme';
  */
 export function OfferCard({
   name,
-  logo,
   verified,
   subtitle,
   rating,
-  reviews,
+  extra,
   tiles,
   meta,
   ribbon,
@@ -29,11 +27,10 @@ export function OfferCard({
   footer,
 }: {
   name: string;
-  logo: LogoSpec;
   verified?: boolean;
   subtitle?: string;
-  rating: number;
-  reviews?: number;
+  rating?: number | null;
+  extra?: ReactNode;
   tiles: ReactNode;
   meta?: ReactNode;
   ribbon?: { label: string; icon: IconName };
@@ -48,22 +45,20 @@ export function OfferCard({
     <Card highlight={!!ribbon} style={{ padding: 14, paddingTop: ribbon ? 38 : 14, overflow: 'hidden', gap: 12 }}>
       {ribbon ? <Ribbon label={ribbon.label} icon={ribbon.icon} /> : null}
       <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-        <CompanyLogo logo={logo} size={50} />
+        <CompanyLogo name={name} size={50} />
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
             <T style={{ fontSize: 15, fontWeight: '700', flexShrink: 1 }}>{name}</T>
             {verified ? <VerifiedBadge /> : null}
           </View>
           {subtitle ? <T style={{ fontSize: 12, color: colors.muted }}>{subtitle}</T> : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <Stars rating={rating} />
-            <Num style={{ fontWeight: '700', fontSize: 13 }}>{rating.toFixed(1)}</Num>
-            {reviews != null ? (
-              <T style={{ fontSize: 12, color: colors.muted }}>
-                (<Num style={{ fontSize: 12, color: colors.muted }}>{reviews}</Num> {t('reviews')})
-              </T>
-            ) : null}
-          </View>
+          {rating != null ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Stars rating={rating} />
+              <Num style={{ fontWeight: '700', fontSize: 13 }}>{rating.toFixed(1)}</Num>
+            </View>
+          ) : null}
+          {extra}
         </View>
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>{tiles}</View>

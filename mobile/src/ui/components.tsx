@@ -5,6 +5,7 @@ import {
   I18nManager,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,15 +15,14 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useI18n } from '../i18n/I18nProvider';
 import type { StringKey } from '../i18n/strings';
 import { moneyParts, type Baisa } from '../domain/money';
 import type { VerificationLevel } from '../domain/score';
-import { IS_MOCK, type CategoryKey, type LogoSpec } from '../data/mock';
-import { useStore } from '../state/store';
+import type { Category } from '../api/types';
 import { Icon, QMark, type IconName } from './Icon';
 import { colors, radius, shadow, space, TOUCH } from './theme';
 
@@ -88,17 +88,14 @@ export function HeaderButton({ icon, label, onPress, dot }: { icon: IconName; la
   );
 }
 
-export function AppHeader({ title, back, sub = 'sub_proc', action }: { title?: string; back?: boolean; sub?: StringKey; action?: ReactNode }) {
+export function AppHeader({ title, back, sub = 'sub_proc', action, onBell, unread = 0 }: { title?: string; back?: boolean; sub?: StringKey; action?: ReactNode; onBell?: () => void; unread?: number }) {
   const insets = useSafeAreaInsets();
   const { t } = useI18n();
-  const { unread } = useStore();
   const d = useDir();
   const startNode = back ? (
     <HeaderButton icon="chevronStart" label={t('back')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
-  ) : (
-    <HeaderButton icon="menu" label={t('menu')} onPress={() => router.navigate('/more')} />
-  );
-  const endNode = action ?? <HeaderButton icon="bell" label={t('notifs')} onPress={() => router.navigate('/alerts')} dot={unread > 0 || !back} />;
+  ) : null;
+  const endNode = action ?? (onBell ? <HeaderButton icon="bell" label={t('notifs')} onPress={onBell} dot={unread > 0} /> : <View style={{ width: TOUCH }} />);
   return (
     <View style={[s.header, d.dir, { paddingTop: insets.top + 6 }]}>
       <View style={[s.hside, { justifyContent: 'flex-start' }]}>
@@ -115,28 +112,18 @@ export function AppHeader({ title, back, sub = 'sub_proc', action }: { title?: s
   );
 }
 
-export function MockBanner() {
-  const { t } = useI18n();
-  if (!IS_MOCK) return null;
-  return (
-    <View style={s.mock} accessibilityRole="text">
-      <Icon name="info" size={13} color={colors.mockInk} />
-      <T style={{ color: colors.mockInk, fontSize: 11, fontWeight: '600', flexShrink: 1 }} center>
-        {t('mock')}
-      </T>
-    </View>
-  );
-}
-
-/** Screen shell: navy header, permanent mock banner, scrollable body. */
-export function Screen({ header, children, footer, scroll = true, padded = true }: { header: ReactNode; children: ReactNode; footer?: ReactNode; scroll?: boolean; padded?: boolean }) {
+/** Screen shell: navy header and a scrollable body with pull-to-refresh. */
+export function Screen({ header, children, footer, scroll = true, padded = true, onRefresh, refreshing = false }: { header: ReactNode; children: ReactNode; footer?: ReactNode; scroll?: boolean; padded?: boolean; onRefresh?: () => void; refreshing?: boolean }) {
   const d = useDir();
   return (
     <View style={[{ flex: 1, backgroundColor: colors.bg }, d.dir]}>
       {header}
-      <MockBanner />
       {scroll ? (
-        <ScrollView contentContainerStyle={padded ? s.body : { paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={padded ? s.body : { paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.navy} /> : undefined}
+        >
           {children}
         </ScrollView>
       ) : (
@@ -291,40 +278,23 @@ export function Ribbon({ label, icon }: { label: string; icon: IconName }) {
   );
 }
 
-export function CompanyLogo({ logo, size = 54 }: { logo: LogoSpec; size?: number }) {
-  const box: ViewStyle = { width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' };
-  if (logo.kind === 'wave') {
-    return (
-      <View style={box}>
-        <Svg width={size} height={size} viewBox="0 0 54 54">
-          <Defs>
-            <LinearGradient id="wv" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#38BDF8" />
-              <Stop offset="1" stopColor="#1D4ED8" />
-            </LinearGradient>
-          </Defs>
-          <Circle cx={27} cy={27} r={20} fill="url(#wv)" />
-          <Path d="M8 26c6-4 12-4 19 0s13 4 19 0M8 32c6-4 12-4 19 0s13 4 19 0" stroke="#fff" strokeWidth={3} fill="none" />
-        </Svg>
-      </View>
-    );
-  }
-  if (logo.kind === 'ship' || logo.kind === 'globe') {
-    return (
-      <View style={box}>
-        <Icon name={logo.kind} size={size * 0.6} color={logo.kind === 'ship' ? colors.blue : colors.navy2} />
-      </View>
-    );
-  }
+const LOGO_COLORS = ['#14213D', '#EA580C', '#1D4ED8', '#0E7490', '#7C3AED', '#B45309', '#BE123C', '#0F766E'];
+
+/** Monogram from the company name (real logos come with verified profiles later). */
+export function CompanyLogo({ name, size = 54 }: { name: string; size?: number }) {
+  const letter = (name.trim()[0] ?? '?').toUpperCase();
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const color = LOGO_COLORS[h % LOGO_COLORS.length];
   return (
-    <View style={box}>
-      <Text style={{ fontSize: size * 0.44, fontWeight: '800', color: logo.color ?? colors.navy }}>{logo.letter}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontSize: size * 0.42, fontWeight: '800', color }}>{letter}</Text>
     </View>
   );
 }
 
 /** Illustrated product thumbnails (drawn, not photos). */
-export function Thumb({ category, size = 72 }: { category: CategoryKey; size?: number }) {
+export function Thumb({ category, size = 72 }: { category: Category; size?: number }) {
   const wrap: ViewStyle = { width: size, height: size, borderRadius: 14, overflow: 'hidden' };
   if (category === 'c_hvac') {
     return (
@@ -491,7 +461,6 @@ export const s = StyleSheet.create({
   htitle: { color: colors.white, fontSize: 16, fontWeight: '700', flexShrink: 1 },
   hbtn: { width: TOUCH, height: TOUCH, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   hdot: { position: 'absolute', top: 8, end: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: colors.amber, borderWidth: 2, borderColor: colors.navy },
-  mock: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: colors.mockBg, paddingVertical: 5, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#F8E3B5' },
   body: { padding: space.lg, gap: 14, paddingBottom: 32 },
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: radius.md, paddingHorizontal: 18 },
   amberShadow: { shadowColor: colors.amber2, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 3 },

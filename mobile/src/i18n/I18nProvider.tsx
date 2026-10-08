@@ -1,6 +1,9 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { STRINGS, type Lang, type StringKey } from './strings';
-import type { Localized } from '../data/mock';
+
+export type Localized = { ar: string; en: string };
 
 export interface I18n {
   lang: Lang;
@@ -19,7 +22,19 @@ const Ctx = createContext<I18n | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   // Arabic-first product: Arabic is the default regardless of device language.
-  const [lang, setLang] = useState<Lang>('ar');
+  const [lang, setLangState] = useState<Lang>('ar');
+  const native = Platform.OS !== 'web';
+  // Remember the viewer's language choice on this device.
+  useEffect(() => {
+    if (!native) return;
+    SecureStore.getItemAsync('barq.lang').then((v) => {
+      if (v === 'ar' || v === 'en') setLangState(v);
+    }).catch(() => {});
+  }, [native]);
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    if (native) SecureStore.setItemAsync('barq.lang', l).catch(() => {});
+  }, [native]);
 
   const t = useCallback<I18n['t']>(
     (key, params) => {
@@ -40,7 +55,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       dayWord: (n) => (n === 1 ? t('d_1') : n === 2 ? t('d_2') : n <= 10 ? t('d_few') : t('d_many')),
       locale: lang === 'ar' ? 'ar-OM-u-nu-latn' : 'en-GB',
     }),
-    [lang, t],
+    [lang, t, setLang],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

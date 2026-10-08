@@ -46,6 +46,7 @@ const PATHS = {
   camera: 'M4 8h3l1.5-2.5h7L17 8h3v11.5H4z M12 10a3.5 3.5 0 110 7 3.5 3.5 0 010-7z',
   activity: 'M3 12h4l3-7 4 14 3-7h4',
   refresh: 'M20 11a8 8 0 10-2.3 5.7M20 4v7h-7',
+  mail: 'M4 6h16v12H4z M4 7l8 6 8-6',
 } as const;
 
 export type IconName = keyof typeof PATHS | 'bolt' | 'star';
