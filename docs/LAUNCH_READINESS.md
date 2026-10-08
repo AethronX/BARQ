@@ -38,7 +38,7 @@ _Status as of 2026-10-08. The software MVP is built; the product is **not yet la
 | B7 | **Support channel** | Ops | Real support email/WhatsApp number (placeholder `support@barq.om` in the app). |
 | B8 | **Store accounts & builds** | You | Apple Developer (USD 99/yr) and Google Play (USD 25 once); app icon/splash with BARQ brand (currently Expo defaults); `eas build` + store listings + screenshots. |
 | B9 | **Supabase plan** | You | Free plan pauses inactive projects and has no backups. Use Pro (≈USD 25/month) before launch for daily backups and no pausing. |
-| B11 | **Remove demo mode, test sign-in & test accounts** | You + me | Demo mode embeds the test passwords in the app bundle. Set `EXPO_PUBLIC_DEMO_MODE=false` and `EXPO_PUBLIC_TEST_LOGIN=false`, remove the `EXPO_PUBLIC_DEMO_*` values, and change or delete the test accounts **before any real company signs up**. Also and delete the `*@test.barq.om` users and their TEST companies (they are marked `test_account` in user metadata and `test_account.created` in the audit log). |
+| B11 | **Remove demo mode, test sign-in & test accounts** | You + me | Demo mode embeds the test passwords in the app bundle. Set `EXPO_PUBLIC_DEMO_MODE=false` and `EXPO_PUBLIC_TEST_LOGIN=false`, remove the `EXPO_PUBLIC_DEMO_*` values, and change or delete the test accounts **before any real company signs up**. Then delete the `*@test.barq.om` users and their TEST companies (they are marked `test_account` in user metadata and `test_account.created` in the audit log). |
 | B10 | **Retention & deletion policy** | Counsel + Ops | Decide what happens to RFQs/orders when a user asks for deletion (anonymise vs keep for N years). |
 
 ## 4. Deferred (post-MVP backlog, by design)
