@@ -1,6 +1,10 @@
 # BARQ
 
-Oman-focused B2B procurement and logistics marketplace (RFQ → competing quotes → order → delivery). **Pre-development: no application code yet.**
+Oman-focused B2B procurement and logistics marketplace (RFQ → competing quotes → order → delivery). **Status:** clickable prototype + Expo mobile app on mock data. Not production-ready.
+
+## Try it
+- Mobile app (Expo Go): see [mobile/README.md](mobile/README.md)
+- HTML prototype: `prototype/barq-prototype.html`; stakeholder edition: `prototype/barq-stakeholders.html` (built by `prototype/build-stakeholders.py`)
 
 ## Docs
 - [Project status](docs/PROJECT_STATUS.md)

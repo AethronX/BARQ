@@ -1,0 +1,277 @@
+<!-- STAKEHOLDER ADDON: merged into barq-prototype.html by build-stakeholders.py -->
+<!--CSS-->
+/* ---------- stakeholder edition: page becomes a two-column briefing beside the phone ---------- */
+html,body{height:auto}
+body{display:block;padding-block:20px}
+.stage{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:32px;align-items:start}
+.stage .device{height:min(880px,calc(100dvh - 40px));min-height:640px;position:sticky;top:calc(20px + env(safe-area-inset-top,0px))}
+.stage .deck{max-width:none;align-items:stretch}
+.stage .deck-top,.stage .jump{max-width:none}
+@media (max-width:980px){
+  .stage{grid-template-columns:1fr;max-width:520px}
+  .stage .device{position:relative;top:0;height:760px;order:2}
+  .brief{order:1}
+}
+@media (max-width:480px){.stage .device{height:720px;min-height:0}}
+.brief{display:flex;flex-direction:column;gap:18px;min-width:0}
+.b-hero{background:var(--navy);color:#fff;border-radius:24px;padding:24px;position:relative;overflow:hidden}
+.b-hero .bolts{position:absolute;inset-inline-end:-20px;top:-20px;width:190px;height:220px;opacity:.85;pointer-events:none}
+[dir=rtl] .b-hero .bolts{transform:scaleX(-1)}
+.b-hero .eyebrow{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--amber);position:relative}
+.b-hero h1{margin:6px 0 8px;font-size:clamp(24px,3.4vw,34px);line-height:1.25;text-wrap:balance;position:relative;max-width:22ch}
+.b-hero h1 em{font-style:normal;color:var(--amber)}
+.b-hero p{margin:0;color:var(--navy-ink);font-size:14.5px;max-width:58ch;position:relative}
+.b-hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;position:relative}
+.b-hero .acts .btn{width:auto}
+.b-hero .acts .btn.line{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff}
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.flow li{list-style:none;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.flow .n{width:26px;height:26px;border-radius:50%;background:var(--amber-soft);color:#9A5B00;font-family:var(--num);font-weight:700;font-size:12.5px;display:grid;place-items:center}
+.flow b{font-size:13px;line-height:1.35}
+.flow span{font-size:11.5px;color:var(--muted);line-height:1.45}
+.flow ol{margin:0;padding:0;display:contents}
+@media (max-width:700px){.flow{grid-template-columns:1fr 1fr}.flow li:last-child{grid-column:1/-1}}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.blk h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
+.blk h2 svg{width:22px;height:22px;color:var(--amber-2)}
+.blk .lead{margin:0;color:var(--muted);font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.two{grid-template-columns:1fr}}
+.sf label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
+.sf label i{color:#E11D48;font-style:normal;margin-inline-start:3px}
+.sf .in{min-height:48px;font-size:14px;padding:10px 14px}
+.sf textarea.in{min-height:96px}
+.roles{display:flex;flex-wrap:wrap;gap:8px}
+.roles button{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px}
+.roles button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.okcard{display:flex;gap:12px;align-items:flex-start;background:var(--green-soft);border-radius:16px;padding:14px;color:#14532D}
+.okcard svg{width:26px;height:26px;flex:none;color:#16A34A}
+.okcard b{display:block;font-size:14.5px}
+.okcard span{font-size:12.5px}
+.state{display:flex;gap:10px;align-items:center;background:var(--tile);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--ink-2)}
+.state svg{width:20px;height:20px;flex:none}
+.stats4{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:620px){.stats4{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.stats4 div{background:var(--tile);border-radius:14px;padding:10px 12px;min-width:0}
+.stats4 b{font-family:var(--num);font-size:22px;font-weight:600;display:block}
+.stats4 span{font-size:11.5px;color:var(--muted)}
+.tblw{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+.tblw table{border-collapse:collapse;width:100%;min-width:760px;font-size:12.5px}
+.tblw th,.tblw td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+.tblw thead th{background:var(--tile);font-weight:700;white-space:nowrap}
+.tblw tr:last-child td{border-bottom:0}
+.tblw td .fb{color:var(--ink-2);max-width:36ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.tblw select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--card)}
+.share{display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--ink-2)}
+.share ol{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+.cbtn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:13px}
+.cbtn svg{width:18px;height:18px}
+.disc{font-size:11.5px;color:var(--muted);line-height:1.6}
+<!--/CSS-->
+<!--HTML-->
+<div class="stage">
+<div class="brief" id="brief"></div>
+<div class="device"><div class="screen" id="app"></div></div>
+</div>
+<!--/HTML-->
+<!--JS-->
+<script>
+/* Stakeholder layer: briefing, party registration (db), screen comments (comments). Runs beside the prototype. */
+(function(){
+'use strict';
+const D={
+ar:{
+eyebrow:'عرض للشركاء · نسخة تجريبية',h1:'بارق يحوّل المشتريات والتوصيل بين الشركات في عُمان إلى <em>مسار تنافسي واحد</em>',
+lead:'يرسل المشتري طلب عرض سعر، فيتنافس الموردون الموثّقون بعروضهم، ويقارن المشتري بشفافية، ثم يختار التوصيل ويتتبع الشحنة. جرّب النموذج على الهاتف المجاور.',
+join_btn:'سجّل كطرف مهتم',try_btn:'جرّب المسار كاملاً',
+f1:'المشتري ينشئ الطلب',f1s:'المنتج، الكمية، الموقع، الموعد',f2:'الموردون يتنافسون',f2s:'عروض سرّية لكل مورد',f3:'مقارنة شفافة',f3s:'السعر والسرعة والموثوقية ونقاط بارق',f4:'اختيار وطلبية',f4s:'تأكيد صريح وطلبية واحدة',f5:'توصيل وتتبع',f5s:'توصيل المورد أو شركات محلية',
+join_t:'انضم إلى بارق كطرف مهتم',join_l:'سجّل اهتمامك لنتواصل معك عند بدء التجربة في مسقط. تظهر بياناتك لفريق بارق فقط، ولا يراها بقية المسجلين.',
+nm:'الاسم',org:'الشركة / الجهة',role:'صفتك',city:'المدينة',contact:'وسيلة التواصل (هاتف أو بريد)',contact_ph:'+968 9xxx xxxx أو name@company.om',
+r_buyer:'مشترٍ',r_supplier:'مورد',r_carrier:'شركة توصيل',r_investor:'مستثمر',r_gov:'جهة حكومية',r_other:'أخرى',
+pilot:'أرغب في المشاركة في التجربة الأولى',fb:'ملاحظاتك على النموذج (اختياري)',fb_ph:'ما الذي أعجبك؟ ما الذي ينقص لتستخدمه في عملك؟',
+save:'تسجيل',update:'حفظ التعديل',saving:'جارٍ الحفظ…',edit:'تعديل بياناتي',
+ok_t:'تم تسجيلك كطرف مهتم',ok_s:'شكراً {n}. سيتواصل معك فريق بارق عند فتح التجربة.',
+e_nm:'أدخل الاسم',e_org:'أدخل اسم الشركة أو الجهة',e_role:'اختر صفتك',e_contact:'أدخل رقم هاتف أو بريداً صحيحاً',
+s_loading:'جارٍ الاتصال…',s_signin:'سجّل الدخول إلى Claude وافتح الصفحة من رابط المشاركة حتى تتمكن من التسجيل.',
+s_ro:'صلاحيتك على هذه الصفحة للعرض فقط. اطلب من صاحب الصفحة إضافتك بصلاحية "مساهم" (Contributor) للتسجيل.',
+s_fail:'تعذّر الحفظ. تحقق من الاتصال وحاول مرة أخرى.',s_quota:'امتلأت سعة التسجيل. تواصل مع فريق بارق مباشرة.',
+cm_t:'علّق على الشاشة',cm_s:'افتح أي شاشة في الهاتف ثم اضغط الزر لترك ملاحظة مرتبطة بها.',cm_btn:'أضف تعليقاً على هذه الشاشة',cm_off:'التعليقات غير متاحة في هذا العرض.',
+own_t:'الأطراف المسجّلة',own_l:'تظهر هذه القائمة لك ولمن تمنحه صلاحية "محرر" فقط. كل مسجّل يرى بياناته وحده.',
+total:'الإجمالي',pilot_n:'يريدون التجربة',none:'لا يوجد مسجّلون بعد. شارك الرابط مع الأطراف ليظهروا هنا.',
+c_date:'التاريخ',c_status:'المتابعة',st_new:'جديد',st_contacted:'تم التواصل',st_pilot:'ضمن التجربة',st_no:'غير مناسب',yes:'نعم',no:'لا',
+copy:'نسخ القائمة (CSV)',copied:'تم النسخ',copy_fail:'تعذّر النسخ، حدّد الجدول وانسخه يدوياً',
+sh_t:'كيف تضيف الأطراف',sh1:'من زر المشاركة (Share) أعلى الصفحة أضف بريد كل طرف.',sh2:'اختر صلاحية "مساهم" (Contributor) ليتمكن من التسجيل والتعليق.',sh3:'من يحصل على صلاحية "عارض" يرى العرض فقط ولا يستطيع التسجيل.',
+disc:'نموذج تصميم: الشركات والأسعار والتقييمات داخل الهاتف مختلقة. لا توجد شراكات أو تكاملات قائمة مع أي شركة.'
+},
+en:{
+eyebrow:'Stakeholder preview · prototype',h1:'BARQ turns B2B procurement and delivery in Oman into <em>one competitive workflow</em>',
+lead:'A buyer sends an RFQ, verified suppliers compete with quotes, the buyer compares transparently, then picks delivery and tracks the shipment. Try it on the phone beside this text.',
+join_btn:'Register your interest',try_btn:'Try the full flow',
+f1:'Buyer creates the RFQ',f1s:'Product, quantity, site, date',f2:'Suppliers compete',f2s:'Each quote stays confidential',f3:'Transparent comparison',f3s:'Price, speed, reliability, BARQ Score',f4:'Select and order',f4s:'Explicit confirmation, one order',f5:'Deliver and track',f5s:'Supplier or local carriers',
+join_t:'Join BARQ as an interested party',join_l:'Register so we can reach you when the Muscat pilot opens. Only the BARQ team sees your details; other registrants do not.',
+nm:'Name',org:'Company / organisation',role:'You are a',city:'City',contact:'Contact (phone or email)',contact_ph:'+968 9xxx xxxx or name@company.om',
+r_buyer:'Buyer',r_supplier:'Supplier',r_carrier:'Delivery company',r_investor:'Investor',r_gov:'Government body',r_other:'Other',
+pilot:'I want to join the first pilot',fb:'Your feedback on the prototype (optional)',fb_ph:'What works? What is missing before you would use it?',
+save:'Register',update:'Save changes',saving:'Saving…',edit:'Edit my details',
+ok_t:'You are registered',ok_s:'Thank you {n}. The BARQ team will contact you when the pilot opens.',
+e_nm:'Enter your name',e_org:'Enter your company or organisation',e_role:'Choose your role',e_contact:'Enter a valid phone number or email',
+s_loading:'Connecting…',s_signin:'Sign in to Claude and open this page from its share link to register.',
+s_ro:'You have view-only access. Ask the page owner to add you as a Contributor to register.',
+s_fail:'Could not save. Check your connection and try again.',s_quota:'Registration is full. Contact the BARQ team directly.',
+cm_t:'Comment on a screen',cm_s:'Open any screen on the phone, then press the button to leave a note attached to it.',cm_btn:'Comment on this screen',cm_off:'Comments are not available in this view.',
+own_t:'Registered parties',own_l:'Only you and people you make Editor see this list. Each registrant sees only their own entry.',
+total:'Total',pilot_n:'Want the pilot',none:'Nobody has registered yet. Share the link with stakeholders and they appear here.',
+c_date:'Date',c_status:'Follow-up',st_new:'New',st_contacted:'Contacted',st_pilot:'In pilot',st_no:'Not a fit',yes:'Yes',no:'No',
+copy:'Copy list (CSV)',copied:'Copied',copy_fail:'Copy failed. Select the table and copy it manually',
+sh_t:'How to add stakeholders',sh1:'Use the Share button at the top of the page to add each person by email.',sh2:'Give them Contributor access so they can register and comment.',sh3:'People with Viewer access can only look; they cannot register.',
+disc:'Design prototype: companies, prices and ratings inside the phone are fictional. There are no existing partnerships or integrations with any company.'
+}};
+const ROLES=['buyer','supplier','carrier','investor','gov','other'];
+const STATUSES=['new','contacted','pilot','no'];
+const lg=()=>document.documentElement.lang==='en'?'en':'ar';
+const t=(k,p)=>{let v=D[lg()][k]??D.ar[k]??k;if(p)for(const x in p)v=v.split('{'+x+'}').join(p[x]);return v};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const svg=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const I={users:svg('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.6.1 4.5 1.9 5 4.9"/>'),
+ chat:svg('<path d="M4 5h16v11H9l-5 4z"/>'),check:svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.8"/>'),info:svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8h.01"/>'),
+ share:svg('<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>'),
+ copy:svg('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>'),
+ bolt:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 2L4.5 13.5h6.5L9.5 22l9.5-12.5h-6.5z"/></svg>'};
+const BOLTS=`<svg class="bolts" viewBox="0 0 170 200" aria-hidden="true"><path d="M120 0h34L80 120H46z" fill="#F8A91B" opacity=".8"/><path d="M162 30h18L118 140h-18z" fill="#F8A91B" opacity=".4"/></svg>`;
+
+/* state */
+const S={phase:'loading',db:null,user:null,comments:null,uid:null,admin:false,mine:null,all:[],editing:false,busy:false,err:'',errs:{},
+  f:{name:'',org:'',role:'',city:'',contact:'',pilot:true,feedback:''},copyMsg:''};
+const brief=document.getElementById('brief');
+
+function vForm(){
+  const f=S.f,e=S.errs,upd=!!S.mine;
+  const fld=(id,k,inner,req=true)=>`<div class="sf"><label for="${id}">${t(k)}${req?'<i>*</i>':''}</label>${inner}${e[k]?`<div class="errt" role="alert">${t('e_'+k)}</div>`:''}</div>`;
+  return `<form id="shf" class="blk" style="padding:0;border:0;gap:12px" novalidate>
+    <div class="two">${fld('sh-nm','nm',`<input class="in ${e.nm?'err':''}" id="sh-nm" data-k="name" maxlength="80" autocomplete="name" value="${esc(f.name)}">`)}
+      ${fld('sh-org','org',`<input class="in ${e.org?'err':''}" id="sh-org" data-k="org" maxlength="120" autocomplete="organization" value="${esc(f.org)}">`)}</div>
+    <div class="sf"><label id="sh-role-l">${t('role')}<i>*</i></label><div class="roles" role="group" aria-labelledby="sh-role-l">${ROLES.map(r=>`<button type="button" data-role="${r}" aria-pressed="${f.role===r}">${t('r_'+r)}</button>`).join('')}</div>${e.role?`<div class="errt" role="alert">${t('e_role')}</div>`:''}</div>
+    <div class="two">${fld('sh-city','city',`<input class="in" id="sh-city" data-k="city" maxlength="60" value="${esc(f.city)}">`,false)}
+      ${fld('sh-ct','contact',`<input class="in ${e.contact?'err':''}" id="sh-ct" data-k="contact" maxlength="120" inputmode="email" placeholder="${t('contact_ph')}" value="${esc(f.contact)}" dir="ltr">`)}</div>
+    <label class="chk" style="margin:0"><input type="checkbox" id="sh-pilot" ${f.pilot?'checked':''}><span>${t('pilot')}</span></label>
+    ${fld('sh-fb','fb',`<textarea class="in" id="sh-fb" data-k="feedback" maxlength="1500" placeholder="${t('fb_ph')}">${esc(f.feedback)}</textarea>`,false)}
+    ${S.err?`<div class="state" role="alert" style="background:var(--red-soft);color:var(--red)">${I.info}${S.err}</div>`:''}
+    <button type="submit" class="btn amber" ${S.busy?'disabled':''} style="width:auto;align-self:flex-start;padding:0 26px">${S.busy?t('saving'):(upd?t('update'):t('save'))}</button>
+  </form>`;
+}
+function vJoin(){
+  let body;
+  if(S.phase==='loading')body=`<div class="state">${I.info}${t('s_loading')}</div>`;
+  else if(S.phase==='nodb')body=`<div class="state">${I.info}${t('s_signin')}</div>`;
+  else if(S.phase==='ro')body=`<div class="state">${I.info}${t('s_ro')}</div>`;
+  else if(S.mine&&!S.editing)body=`<div class="okcard">${I.check}<div><b>${t('ok_t')}</b><span>${esc(t('ok_s',{n:S.mine.name}))}</span></div></div><button class="cbtn" data-sh="edit" style="align-self:flex-start">${t('edit')}</button>`;
+  else body=vForm();
+  return `<section class="blk" id="join"><h2>${I.users}${t('join_t')}</h2><p class="lead">${t('join_l')}</p>${body}</section>`;
+}
+function vOwner(){
+  if(!S.admin)return '';
+  const all=S.all,cnt=r=>all.filter(x=>x.role===r).length;
+  const rows=all.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.org)}</td><td>${esc(t('r_'+x.role))}</td><td>${esc(x.city||'—')}</td><td dir="ltr" style="text-align:start">${esc(x.contact)}</td>
+    <td>${x.pilot?t('yes'):t('no')}</td><td><div class="fb">${esc(x.feedback||'—')}</div></td><td class="num">${esc((x.updatedAt||x.createdAt||'').slice(0,10))}</td>
+    <td><select data-st="${esc(x.id)}" aria-label="${t('c_status')}">${STATUSES.map(s=>`<option value="${s}" ${(x.status||'new')===s?'selected':''}>${t('st_'+s)}</option>`).join('')}</select></td></tr>`).join('');
+  return `<section class="blk"><h2>${I.users}${t('own_t')}</h2><p class="lead">${t('own_l')}</p>
+    <div class="stats4"><div><b>${all.length}</b><span>${t('total')}</span></div><div><b>${cnt('buyer')}</b><span>${t('r_buyer')}</span></div><div><b>${cnt('supplier')}</b><span>${t('r_supplier')}</span></div><div><b>${cnt('carrier')}</b><span>${t('r_carrier')}</span></div><div><b>${all.filter(x=>x.pilot).length}</b><span>${t('pilot_n')}</span></div></div>
+    ${all.length?`<div class="tblw"><table><thead><tr><th>${t('nm')}</th><th>${t('org')}</th><th>${t('role')}</th><th>${t('city')}</th><th>${t('contact')}</th><th>${t('pilot')}</th><th>${t('fb')}</th><th>${t('c_date')}</th><th>${t('c_status')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="row"><button class="cbtn" data-sh="copy">${I.copy}${t('copy')}</button><span class="muted" style="font-size:12px" role="status">${S.copyMsg}</span></div>`:`<div class="state">${I.info}${t('none')}</div>`}
+    <div class="share"><b style="color:var(--ink)">${t('sh_t')}</b><ol><li>${t('sh1')}</li><li>${t('sh2')}</li><li>${t('sh3')}</li></ol></div></section>`;
+}
+function vComments(){
+  return `<section class="blk"><h2>${I.chat}${t('cm_t')}</h2><p class="lead">${t('cm_s')}</p>
+    ${S.comments?`<button class="cbtn" data-sh="comment" style="align-self:flex-start">${I.chat}${t('cm_btn')}</button>`:`<div class="state">${I.info}${t('cm_off')}</div>`}</section>`;
+}
+function render(){
+  const ae=document.activeElement,fid=ae&&brief.contains(ae)?ae.id:null;
+  brief.innerHTML=`<section class="b-hero">${BOLTS}<div class="eyebrow">${t('eyebrow')}</div><h1>${t('h1')}</h1><p>${t('lead')}</p>
+     <div class="acts"><a class="btn amber" href="#join" style="text-decoration:none">${I.bolt}${t('join_btn')}</a><button class="btn line" data-j="new">${t('try_btn')}</button></div></section>
+   <ol class="flow">${[1,2,3,4,5].map(i=>`<li><span class="n">${i}</span><b>${t('f'+i)}</b><span>${t('f'+i+'s')}</span></li>`).join('')}</ol>
+   ${vOwner()}${vJoin()}${vComments()}<p class="disc">${t('disc')}</p>`;
+  if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
+}
+
+/* validation + save */
+function validate(){
+  const f=S.f,e={};
+  if(f.name.trim().length<2)e.nm=1;
+  if(f.org.trim().length<2)e.org=1;
+  if(!ROLES.includes(f.role))e.role=1;
+  const c=f.contact.trim();
+  if(!(/^\+?[0-9 ()-]{7,20}$/.test(c)||/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(c)))e.contact=1;
+  return e;
+}
+async function save(){
+  if(S.busy||!S.db||!S.uid)return;
+  S.errs=validate();S.err='';
+  if(Object.keys(S.errs).length){render();const el=brief.querySelector('.err');if(el)el.focus();return}
+  S.busy=true;render();
+  const f=S.f,now=new Date().toISOString();
+  const body={name:f.name.trim(),org:f.org.trim(),role:f.role,city:f.city.trim(),contact:f.contact.trim(),pilot:!!f.pilot,feedback:f.feedback.trim(),updatedAt:now};
+  const ref=S.db.doc('stakeholders/'+S.uid);
+  try{
+    if(S.mine)await ref.update(body);else await ref.set({...body,createdAt:now,status:'new'});
+    S.editing=false;
+  }catch(err){
+    const code=err&&err.code;
+    if(code==='invalid_argument'&&!S.mine){S.phase='ro'}
+    else S.err=code==='quota_exceeded'?t('s_quota'):t('s_fail');
+  }
+  S.busy=false;render();
+}
+
+/* events (delegated on the briefing column) */
+brief.addEventListener('input',ev=>{const k=ev.target.dataset&&ev.target.dataset.k;if(k){S.f[k]=ev.target.value;const map={name:'nm',org:'org',contact:'contact'};if(S.errs[map[k]]){delete S.errs[map[k]];ev.target.classList.remove('err');const er=ev.target.parentElement.querySelector('.errt');if(er)er.remove()}}});
+brief.addEventListener('change',async ev=>{
+  if(ev.target.id==='sh-pilot'){S.f.pilot=ev.target.checked;return}
+  const id=ev.target.dataset&&ev.target.dataset.st;
+  if(id&&S.db){try{await S.db.doc('stakeholders/'+id).update({status:ev.target.value})}catch(_){render()}}
+});
+brief.addEventListener('submit',ev=>{if(ev.target.id==='shf'){ev.preventDefault();save()}});
+brief.addEventListener('click',async ev=>{
+  const r=ev.target.closest('[data-role]');if(r){S.f.role=r.dataset.role;delete S.errs.role;render();return}
+  const b=ev.target.closest('[data-sh]');if(!b)return;
+  const a=b.dataset.sh;
+  if(a==='edit'){S.editing=true;S.f={...S.f,...S.mine};render()}
+  if(a==='comment'&&S.comments){try{await S.comments.openComposer({element:document.getElementById('app')})}catch(_){}}
+  if(a==='copy'){
+    const head=['name','org','role','city','contact','pilot','feedback','status','date'];
+    const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const csv=[head.join(',')].concat(S.all.map(x=>[x.name,x.org,x.role,x.city,x.contact,x.pilot?'yes':'no',x.feedback,x.status||'new',(x.updatedAt||x.createdAt||'').slice(0,10)].map(q).join(','))).join('\n');
+    try{await navigator.clipboard.writeText(csv);S.copyMsg=t('copied')}catch(_){S.copyMsg=t('copy_fail')}
+    render();setTimeout(()=>{S.copyMsg='';render()},2500);
+  }
+});
+/* follow the prototype's language switch */
+document.addEventListener('click',ev=>{if(ev.target.closest('#l-ar,#l-en,[data-a="lang"]'))setTimeout(render,0)});
+
+render();
+
+/* capabilities light up after first paint */
+(async()=>{
+  const cl=window.claude;
+  if(!cl||!cl.use){S.phase='nodb';render();return}
+  const [db,user,comments]=await Promise.all([cl.use('db'),cl.use('user'),cl.use('comments')]);
+  S.comments=comments;
+  if(!db||!user){S.phase='nodb';render();return}
+  S.db=db;S.user=user;
+  const [uid,admin,canWrite,nameNow]=await Promise.all([user.id(),user.canEdit(),user.can('data.write'),user.name()]);
+  S.uid=uid;S.admin=!!admin;
+  if(!uid){S.phase='nodb';render();return}
+  S.phase=canWrite===false?'ro':'ready';
+  if(nameNow&&!S.f.name)S.f.name=nameNow;
+  db.doc('stakeholders/'+uid).onSnapshot(snap=>{
+    S.mine=snap.exists?{id:snap.id,...snap.data()}:null;
+    if(S.mine&&S.phase==='ro')S.phase='ready';
+    render();
+  },()=>{});
+  if(S.admin){
+    db.collection('stakeholders').orderBy('createdAt','desc').limit(500).onSnapshot(qs=>{S.all=qs.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{});
+  }
+  render();
+})();
+})();
+</script>
+<!--/JS-->
