@@ -10,13 +10,19 @@ import { Icon } from '../ui/Icon';
 import { colors } from '../ui/theme';
 import { authStyles as st } from '../ui/authStyles';
 
+/** Password sign-in exists only for internal test accounts; switch off before launch. */
+const TEST_LOGIN = process.env.EXPO_PUBLIC_TEST_LOGIN === 'true';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function SignIn() {
   const { t } = useI18n();
   const d = useDir();
   const insets = useSafeAreaInsets();
-  const { session, sendCode } = useAuth();
+  const { session, sendCode, signInWithPassword } = useAuth();
+  const [tEmail, setTEmail] = useState('');
+  const [tPass, setTPass] = useState('');
+  const [tError, setTError] = useState<string | null>(null);
+  const [tBusy, setTBusy] = useState(false);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +41,20 @@ export default function SignIn() {
       setError(t(errorKey(err)));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const testLogin = async () => {
+    if (tBusy || !tEmail.trim() || !tPass) return;
+    setTBusy(true);
+    setTError(null);
+    try {
+      await signInWithPassword(tEmail, tPass);
+      router.replace('/');
+    } catch (err) {
+      setTError(t(errorKey(err)));
+    } finally {
+      setTBusy(false);
     }
   };
 
@@ -72,6 +92,19 @@ export default function SignIn() {
           <Btn label={busy ? t('sending') : t('send_code')} icon={busy ? undefined : 'bolt'} loading={busy} onPress={submit} />
           <T center style={{ fontSize: 11.5, color: colors.muted }}>{t('terms_note')}</T>
         </View>
+        {TEST_LOGIN ? (
+          <View style={[st.card, { borderWidth: 2, borderColor: colors.amber }]}>
+            <T style={{ fontWeight: '700', fontSize: 15, color: colors.amberText }}>{t('test_t')}</T>
+            <View style={st.input}>
+              <TextInput value={tEmail} onChangeText={setTEmail} placeholder={t('email')} placeholderTextColor="#94A3B8" autoCapitalize="none" keyboardType="email-address" style={[st.textInput, { textAlign: 'left', writingDirection: 'ltr' }]} accessibilityLabel={t('email')} />
+            </View>
+            <View style={st.input}>
+              <TextInput value={tPass} onChangeText={setTPass} placeholder={t('password')} placeholderTextColor="#94A3B8" autoCapitalize="none" secureTextEntry onSubmitEditing={testLogin} style={[st.textInput, { textAlign: 'left', writingDirection: 'ltr' }]} accessibilityLabel={t('password')} />
+            </View>
+            {tError ? <T style={{ color: colors.error, fontSize: 12.5 }} accessibilityLiveRegion="polite">{tError}</T> : null}
+            <Btn label={t('test_go')} variant="navy" small loading={tBusy} onPress={testLogin} />
+          </View>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );

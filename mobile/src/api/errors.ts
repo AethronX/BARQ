@@ -14,6 +14,7 @@ export function errorKey(e: unknown): StringKey {
   if (code) return `err_${code}` as StringKey;
   if (/network|fetch|timeout|Failed to fetch/i.test(msg)) return 'err_network';
   if (/rate limit|too many/i.test(msg)) return 'err_rate_limited';
+  if (/Invalid login credentials/i.test(msg)) return 'err_login';
   if (/Token has expired|invalid.*otp|otp.*invalid/i.test(msg)) return 'err_otp';
   if (__DEV__) console.warn('[api]', msg);
   return 'err_generic';

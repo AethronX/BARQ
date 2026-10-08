@@ -15,6 +15,8 @@ interface AuthState {
   profileError: unknown;
   sendCode: (email: string) => Promise<void>;
   verifyCode: (email: string, code: string) => Promise<void>;
+  /** Test accounts only (enabled by EXPO_PUBLIC_TEST_LOGIN). */
+  signInWithPassword: (email: string, password: string) => Promise<void>;
   /** Sign in with the link from the email (copied, or the page it opened). */
   verifyLink: (text: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -64,6 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (error) throw error;
+  }, []);
+
   const verifyLink = useCallback(async (text: string) => {
     const get = (k: string) => {
       const m = text.match(new RegExp(`[?&#]${k}=([^&#\\s]+)`));
@@ -105,10 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendCode,
       verifyCode,
       verifyLink,
+      signInWithPassword,
       signOut,
       refresh,
     }),
-    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, verifyLink, signOut, refresh],
+    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, verifyLink, signInWithPassword, signOut, refresh],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
