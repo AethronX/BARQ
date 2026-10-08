@@ -21,7 +21,17 @@ npm install
 npx expo start
 ```
 
-Scan the QR code: with the iPhone Camera, or from inside Expo Go on Android. If the phone can't reach the computer, run `npx expo start --tunnel`.
+Scan the QR code: with the iPhone Camera, or from inside Expo Go on Android.
+
+If Expo Go shows "could not connect to the server":
+- The phone and the PC must be on the same Wi-Fi network (not a guest network; mobile data and VPN off).
+- On Windows, run once in an **administrator** PowerShell:
+  `Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private` and
+  `New-NetFirewallRule -DisplayName "Expo Metro 8081" -Direction Inbound -Protocol TCP -LocalPort 8081 -Action Allow`
+- Check: open `http://<PC-IP>:8081` in the phone's browser. If it loads, the connection works.
+- Last resort: `npm run start:tunnel` (ngrok, can be slow or time out).
+
+`npm run web` opens the same app in a desktop browser.
 
 ## Trying the full flow
 1. Sign in with email A and choose **Buyer**.
