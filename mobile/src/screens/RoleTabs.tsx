@@ -8,6 +8,7 @@ import { useNotifications } from '../api/queries';
 import { useDir } from '../ui/components';
 import { Icon, type IconName } from '../ui/Icon';
 import { colors } from '../ui/theme';
+import { RoleSwitcher } from './RoleSwitcher';
 
 export type TabDef = { name: string; icon: IconName; label: StringKey };
 
@@ -30,6 +31,8 @@ function TabBar({ state, navigation, tabs }: BottomTabBarProps & { tabs: TabDef[
   const insets = useSafeAreaInsets();
   const d = useDir();
   return (
+    <View>
+    <RoleSwitcher />
     <View style={[{ flexDirection: 'row', backgroundColor: colors.navy, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 10), paddingHorizontal: 4 }, d.dir]}>
       {state.routes.map((route, index) => {
         const cfg = tabs.find((x) => x.name === route.name);
@@ -60,6 +63,7 @@ function TabBar({ state, navigation, tabs }: BottomTabBarProps & { tabs: TabDef[
           </Pressable>
         );
       })}
+    </View>
     </View>
   );
 }

@@ -14,6 +14,7 @@ import { formatDate, formatStamp, isToday, notifText } from '../ui/format';
 import { QueryState } from '../ui/states';
 import { colors } from '../ui/theme';
 import { homeFor, routeForLink } from './RoleGate';
+import { DEMO_MODE } from '../auth/demo';
 
 /** Header with the role's notification bell wired up. */
 export function RoleHeader(props: Omit<ComponentProps<typeof AppHeader>, 'onBell' | 'unread'>) {
@@ -196,7 +197,7 @@ export function MoreScreen() {
           <Row icon="info" label={t('version')} right={<Num style={{ color: colors.muted }}>{Constants.expoConfig?.version ?? '1.0.0'}</Num>} last />
         </Card>
         <Card style={{ paddingHorizontal: 16 }}>
-          <Row icon="arrowEnd" label={t('sign_out')} onPress={() => signOut().then(() => router.replace('/sign-in'))} />
+          {DEMO_MODE ? null : <Row icon="arrowEnd" label={t('sign_out')} onPress={() => signOut().then(() => router.replace('/sign-in'))} />}
           {profile?.deletion_requested_at ? (
             <Row icon="warn" label={t('delete_account')} sub={t('delete_requested', { d: formatDate(i18n, profile.deletion_requested_at) })} danger last />
           ) : (

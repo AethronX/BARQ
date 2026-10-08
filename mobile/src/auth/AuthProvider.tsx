@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../api/supabase';
 import { unwrap } from '../api/errors';
-import type { Company, Profile } from '../api/types';
+import type { Company, Profile, Role } from '../api/types';
+import { DEMO_MODE, demoAccount } from './demo';
 
 interface AuthState {
   /** true until the stored session has been read from the keychain. */
@@ -21,6 +22,9 @@ interface AuthState {
   verifyLink: (text: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** Demo mode: sign in as the test account of a role (buyer / supplier / admin). */
+  switchRole: (role: Role) => Promise<void>;
+  switching: boolean;
 }
 
 const Ctx = createContext<AuthState | null>(null);
@@ -29,16 +33,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [switching, setSwitching] = useState(false);
+  const lastUser = useRef<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    const apply = (s: Session | null) => {
+      const id = s?.user.id ?? null;
+      // Never show the previous user's data: drop all cached queries when the user changes.
+      if (id !== lastUser.current) qc.clear();
+      lastUser.current = id;
+      setSession(s);
+    };
+    supabase.auth.getSession().then(async ({ data }) => {
+      let s = data.session;
+      if (!s && DEMO_MODE) {
+        // Demo mode opens straight into the buyer view.
+        const acc = demoAccount('buyer');
+        if (acc) {
+          const r = await supabase.auth.signInWithPassword(acc);
+          s = r.data.session;
+        }
+      }
+      apply(s);
       setInitializing(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      if (!s) qc.clear(); // never show the previous user's data
-    });
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => apply(s));
     return () => data.subscription.unsubscribe();
   }, [qc]);
 
@@ -97,6 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     qc.clear();
   }, [qc]);
 
+  const switchRole = useCallback(async (role: Role) => {
+    const acc = demoAccount(role);
+    if (!acc) throw new Error('demo_unavailable');
+    setSwitching(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword(acc);
+      if (error) throw error;
+    } finally {
+      setSwitching(false);
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     await qc.invalidateQueries({ queryKey: ['me'] });
   }, [qc]);
@@ -115,8 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithPassword,
       signOut,
       refresh,
+      switchRole,
+      switching,
     }),
-    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, verifyLink, signInWithPassword, signOut, refresh],
+    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, verifyLink, signInWithPassword, signOut, refresh, switchRole, switching],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
