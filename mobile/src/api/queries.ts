@@ -184,12 +184,23 @@ export function useAdvanceOrder() {
 /* ---------------------------- notifications ----------------------------- */
 
 export function useNotifications(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['notifications', userId],
+    enabled: !!userId,
+    queryFn: async () => unwrap(await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(100)) as Notification[],
+  });
+}
+
+/**
+ * Live updates: ONE realtime subscription per signed-in user for the whole app
+ * (mounted once in AuthProvider). New notifications refresh every list.
+ */
+export function useRealtimeNotifications(userId: string | undefined) {
   const qc = useQueryClient();
-  // Live updates: new notifications refresh lists across the app.
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(`notifications:${userId}:${Date.now().toString(36)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => {
         qc.invalidateQueries();
       })
@@ -198,11 +209,6 @@ export function useNotifications(userId: string | undefined) {
       supabase.removeChannel(channel);
     };
   }, [userId, qc]);
-  return useQuery({
-    queryKey: ['notifications', userId],
-    enabled: !!userId,
-    queryFn: async () => unwrap(await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(100)) as Notification[],
-  });
 }
 
 export function useMarkRead() {

@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../api/supabase';
 import { unwrap } from '../api/errors';
+import { useRealtimeNotifications } from '../api/queries';
 import type { Company, Profile, Role } from '../api/types';
 import { DEMO_MODE, demoAccount } from './demo';
 
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [qc]);
 
   const uid = session?.user.id;
+  useRealtimeNotifications(uid);
   const profileQ = useQuery({
     queryKey: ['me', uid],
     enabled: !!uid,
