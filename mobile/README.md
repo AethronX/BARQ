@@ -88,3 +88,17 @@ Design and rationale: `../docs/BARQ_BEST_DEAL_ENGINE.md`.
   app says so ("تكلفة التوصيل غير محسوبة").
 - Changing the score weights in `src/domain/score.ts` is a product decision:
   bump `SCORE_VERSION` and announce it, since buyers see the weights in-app.
+
+## One theme, permanently
+
+BARQ ships a single light appearance and does not follow the device's dark
+mode. It is locked in three places, and all three have to change together if
+that is ever revisited:
+
+- `app.json`: `userInterfaceStyle: "light"` at the root and for both platforms,
+  plus `backgroundColor: "#F8FAFC"` so a cold start never flashes dark.
+- `src/ui/theme.ts`: every colour is a fixed value, not a light/dark pair.
+- `src/app/_layout.tsx`: `<StatusBar style="light" />`, for white status-bar
+  text over the navy header.
+
+The navy surfaces (header, tab bar, hero) are brand colour, not a dark theme.

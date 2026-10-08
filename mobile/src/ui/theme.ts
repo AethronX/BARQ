@@ -1,4 +1,13 @@
-/** BARQ design tokens, matching the approved mockups. */
+/**
+ * BARQ design tokens, matching the approved mockups.
+ *
+ * BARQ has ONE theme: this light one. It does not follow the device's dark
+ * mode, now or later — `userInterfaceStyle: "light"` in app.json locks the
+ * native side, and every colour below is a fixed value rather than a
+ * light/dark pair. The navy surfaces (header, tab bar, hero) are brand, not a
+ * dark theme. Anyone adding a dark variant has to revisit this file, the app
+ * config and the status bar together, so the decision stays deliberate.
+ */
 export const colors = {
   navy: '#0F172A',
   navy2: '#14213D',
