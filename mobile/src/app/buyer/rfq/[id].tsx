@@ -1,35 +1,50 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useI18n } from '../../../i18n/I18nProvider';
 import type { StringKey } from '../../../i18n/strings';
-import { TERMS_SCORE } from '../../../api/types';
 import { useAwardQuote, useCancelRfq, useOrders, useRfq, useRfqQuotes, type QuoteWithSupplier } from '../../../api/queries';
+import { toOffers } from '../../../api/offers';
 import { errorKey } from '../../../api/errors';
-import { SCORE_WEIGHTS, scoreQuotes, type ScoreFactor, type ScoreResult, type VerificationLevel } from '../../../domain/score';
+import { partitionOffers } from '../../../domain/offer';
+import { SCORE_WEIGHTS, type ScoreFactor, type ScoredOffer, type VerificationLevel } from '../../../domain/score';
+import { recommend, type OfferLabel } from '../../../domain/recommend';
+import { formatMoney } from '../../../domain/money';
+import { track } from '../../../analytics/events';
 import {
   AppHeader, Btn, Card, Checkbox, CompanyLogo, DayRange, EmptyState, KV, Money, Note, Num, Pill, Screen, Sheet, T, Thumb, Tile, Toast, VerificationPill,
 } from '../../../ui/components';
 import { Icon, type IconName } from '../../../ui/Icon';
 import { Meta, OfferCard, ScoreLink } from '../../../ui/OfferCard';
+import { DealBadges, dealBadge } from '../../../ui/DealBadge';
+import { TotalCostRow } from '../../../ui/TotalCostRow';
+import { WhyBest } from '../../../ui/WhyBest';
 import { formatDate, rfqRef } from '../../../ui/format';
 import { useNow } from '../../../ui/RfqRow';
 import { QueryState } from '../../../ui/states';
 import { colors } from '../../../ui/theme';
 
 type Sort = 'score' | 'price' | 'fast';
-const SORTS: { key: Sort; icon: IconName; label: StringKey; ribbon: StringKey }[] = [
-  { key: 'score', icon: 'star', label: 's_score', ribbon: 'rib_score' },
-  { key: 'price', icon: 'tag', label: 's_price', ribbon: 'rib_price' },
-  { key: 'fast', icon: 'bolt', label: 's_fast', ribbon: 'rib_fast' },
+const SORTS: { key: Sort; icon: IconName; label: StringKey }[] = [
+  { key: 'score', icon: 'star', label: 's_score' },
+  { key: 'price', icon: 'tag', label: 's_price' },
+  { key: 'fast', icon: 'bolt', label: 's_fast' },
 ];
 const FACTORS: { k: ScoreFactor; label: StringKey }[] = [
-  { k: 'price', label: 'fx_price' }, { k: 'speed', label: 'fx_speed' }, { k: 'rating', label: 'fx_rating' },
-  { k: 'reliability', label: 'fx_reliability' }, { k: 'verification', label: 'fx_verification' }, { k: 'terms', label: 'fx_terms' },
+  { k: 'price', label: 'fx_price' },
+  { k: 'supplierQuality', label: 'fx_supplierQuality' },
+  { k: 'deliverySpeed', label: 'fx_deliverySpeed' },
+  { k: 'rating', label: 'fx_rating' },
+  { k: 'paymentTerms', label: 'fx_paymentTerms' },
 ];
 
-type Scored = QuoteWithSupplier & ScoreResult & { completed: number };
-type SheetState = { kind: 'score'; q: Scored } | { kind: 'accept'; q: Scored; ok: boolean } | { kind: 'compare' } | { kind: 'cancel' } | null;
+type Row = ScoredOffer & { quote: QuoteWithSupplier; labels: OfferLabel[] };
+type SheetState =
+  | { kind: 'score'; q: Row }
+  | { kind: 'accept'; q: Row; ok: boolean }
+  | { kind: 'compare' }
+  | { kind: 'cancel' }
+  | null;
 
 export default function BuyerRfqDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,44 +60,55 @@ export default function BuyerRfqDetail() {
   const [sheet, setSheet] = useState<SheetState>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Only live (submitted) quotes compete; withdrawn ones are hidden from comparison.
-  const scored: Scored[] = useMemo(() => {
-    const live = (qq.data?.quotes ?? []).filter((q) => q.status === 'SUBMITTED' || q.status === 'AWARDED');
-    const stats = qq.data?.stats ?? {};
-    return scoreQuotes(
-      live.map((q) => ({
-        ...q,
-        unitPrice: q.unit_price_baisa,
-        maxDays: q.max_days,
-        rating: null, // no rating system yet: excluded, never invented
-        onTimeRate: null, // needs delivery history; excluded until it exists
-        verification: q.supplier.verification as VerificationLevel,
-        termsScore: TERMS_SCORE[q.payment_terms],
-        completed: stats[q.supplier_company_id]?.completed_orders ?? 0,
-      })),
-    );
-  }, [qq.data]);
+  const r = rfq.data;
+
+  /** Withdrawn and expired offers are set aside, not silently dropped. */
+  const engine = useMemo(() => {
+    const quotes = qq.data?.quotes ?? [];
+    const byId = new Map(quotes.map((q) => [q.id, q]));
+    const offers = toOffers({ quotes, stats: qq.data?.stats ?? {}, quantity: r?.quantity ?? 0 });
+    const { live, setAside } = partitionOffers(offers, now);
+    const rec = recommend(live);
+    const rows: Row[] = rec.ranked.map((o) => ({ ...o, quote: byId.get(o.quoteId)!, labels: rec.labels[o.quoteId] ?? [] }));
+    return { rec, rows, setAside: setAside.map((s) => ({ ...s, quote: byId.get(s.offer.quoteId)! })) };
+  }, [qq.data, r?.quantity, now]);
+
+  const { rec, rows, setAside } = engine;
+
+  // One event per request view, not per re-render.
+  const seen = useRef<string | null>(null);
+  useEffect(() => {
+    if (!rows.length || seen.current === id) return;
+    seen.current = id;
+    track({ name: 'deal_engine_viewed', rfqId: id, offers: rows.length, basis: rec.basis });
+    if (rec.best) track({ name: 'deal_recommendation_shown', rfqId: id, offers: rows.length, reasons: rec.best.reasons.length, scoreVersion: rec.best.offer.version });
+  }, [id, rows.length, rec]);
 
   const list = useMemo(() => {
-    const by: Record<Sort, (a: Scored, b: Scored) => number> = {
-      score: (a, b) => b.score - a.score,
-      price: (a, b) => a.total_baisa - b.total_baisa,
-      fast: (a, b) => a.max_days - b.max_days || a.min_days - b.min_days,
+    const by: Record<Sort, (a: Row, b: Row) => number> = {
+      score: () => 0, // already ranked by the engine, deterministically
+      price: (a, b) => a.comparableCost - b.comparableCost,
+      fast: (a, b) => a.maxDays - b.maxDays || a.minDays - b.minDays,
     };
-    return [...scored].sort(by[sort]);
-  }, [scored, sort]);
+    return sort === 'score' ? rows : [...rows].sort(by[sort]);
+  }, [rows, sort]);
 
-  const r = rfq.data;
   const order = orders.data?.find((o) => o.rfq_id === id);
   const canAward = !!r && ['OPEN', 'QUOTES_RECEIVED', 'EVALUATION'].includes(r.status);
   const canCancel = !!r && !['AWARDED', 'CLOSED', 'CANCELLED'].includes(r.status);
-  const minTotal = scored.length ? Math.min(...scored.map((q) => q.total_baisa)) : 0;
-  const minDays = scored.length ? Math.min(...scored.map((q) => q.max_days)) : 0;
-  const sortCfg = SORTS.find((x) => x.key === sort)!;
   const closed = r ? new Date(r.closes_at).getTime() <= now : false;
+  const minDays = rows.length ? Math.min(...rows.map((q) => q.maxDays)) : 0;
+  const minCost = rows.length ? Math.min(...rows.map((q) => q.comparableCost)) : 0;
 
-  const doAward = (q: Scored) => {
-    award.mutate(q.id, {
+  const doAward = (q: Row) => {
+    track({
+      name: 'deal_award_confirmed',
+      rfqId: id,
+      quoteId: q.quoteId,
+      followedRecommendation: rec.best?.offer.quoteId === q.quoteId,
+      scoreVersion: q.version,
+    });
+    award.mutate(q.quoteId, {
       onSuccess: (o) => {
         setSheet(null);
         router.replace({ pathname: '/order/[id]', params: { id: o.id } });
@@ -101,9 +127,15 @@ export default function BuyerRfqDetail() {
         onRefresh={() => { rfq.refetch(); qq.refetch(); }}
         refreshing={rfq.isRefetching || qq.isRefetching}
         footer={
-          scored.length > 1 ? (
+          rows.length > 1 ? (
             <View style={st.dock}>
-              <Btn label={t('compare')} variant="navy" icon="bolt" small onPress={() => setSheet({ kind: 'compare' })} />
+              <Btn
+                label={t('compare')}
+                variant="navy"
+                icon="bolt"
+                small
+                onPress={() => { track({ name: 'deal_comparison_opened', rfqId: id, offers: rows.length }); setSheet({ kind: 'compare' }); }}
+              />
             </View>
           ) : null
         }
@@ -141,9 +173,11 @@ export default function BuyerRfqDetail() {
           ) : null}
         </QueryState>
 
-        <T style={{ fontSize: 16, fontWeight: '700' }}>{t('offers')} <Num style={{ color: colors.muted }}>{`(${scored.length})`}</Num></T>
+        <T style={{ fontSize: 16, fontWeight: '700' }}>{t('offers')} <Num style={{ color: colors.muted }}>{`(${rows.length})`}</Num></T>
 
-        {scored.length > 1 ? (
+        {rec.savings ? <SavingsCard savings={rec.savings} /> : null}
+
+        {rows.length > 1 ? (
           <View style={st.seg}>
             {SORTS.map((x) => {
               const on = sort === x.key;
@@ -155,41 +189,64 @@ export default function BuyerRfqDetail() {
             })}
           </View>
         ) : null}
-        {scored.length ? <Note text={t('no_auto')} /> : null}
+        {rows.length === 1 ? <Note text={t('bde_single')} /> : null}
+        {rows.length ? <Note text={t('no_auto')} /> : null}
 
-        <QueryState isPending={qq.isPending} error={qq.error} onRetry={() => qq.refetch()} isEmpty={!scored.length} empty={<EmptyState icon="chat" title={t('no_quotes')} body={t('no_quotes_s')} />}>
-          {list.map((q, i) => (
-            <OfferCard
-              key={q.id}
-              name={q.supplier.name}
-              verified={q.supplier.verification >= 2}
-              subtitle={t(`v${q.supplier.verification}` as StringKey)}
-              ribbon={i === 0 && list.length > 1 ? { label: t(sortCfg.ribbon), icon: sortCfg.icon } : undefined}
-              tiles={
-                <>
-                  <Tile label={t('eta')} icon="truck" badge={list.length > 1 && q.max_days === minDays ? <Pill label={t('fast_badge')} tone="green" icon="bolt" /> : null}>
-                    <DayRange min={q.min_days} max={q.max_days} />
-                  </Tile>
-                  <Tile label={t('total')} badge={list.length > 1 && q.total_baisa === minTotal ? <Pill label={t('lowest')} tone="green" icon="tag" /> : null}>
-                    <Money amount={q.total_baisa} compact />
-                  </Tile>
-                </>
-              }
-              meta={
-                <View style={{ gap: 6 }}>
-                  <Meta icon="shield" text={q.completed > 0 ? t('completed_n', { n: q.completed }) : t('new_supplier')} />
-                  <Meta icon="doc" text={`${t(`pt_${q.payment_terms}` as StringKey)} · ${t('warranty')} ${q.warranty_months} ${t('mo')}`} />
-                  {q.version > 1 ? <Meta icon="refresh" text={t('version_n', { n: q.version })} /> : null}
-                  {q.notes ? <Meta icon="chat" text={q.notes} /> : null}
-                  <ScoreLink score={q.score} onPress={() => setSheet({ kind: 'score', q })} />
-                </View>
-              }
-              acceptLabel={q.status === 'AWARDED' ? t('qs_AWARDED') : t('accept')}
-              acceptDisabled={!canAward}
-              onAccept={() => setSheet({ kind: 'accept', q, ok: false })}
-            />
-          ))}
+        <QueryState isPending={qq.isPending} error={qq.error} onRetry={() => qq.refetch()} isEmpty={!rows.length} empty={<EmptyState icon="chat" title={t('no_quotes')} body={t('no_quotes_s')} />}>
+          {list.map((q) => {
+            const isBest = rec.best?.offer.quoteId === q.quoteId;
+            const badge = q.labels[0];
+            return (
+              <OfferCard
+                key={q.quoteId}
+                name={q.supplier.name}
+                verified={q.supplier.verification >= 2}
+                subtitle={t(`v${q.supplier.verification}` as StringKey)}
+                ribbon={isBest ? { label: t('bde_best'), icon: 'trophy' } : badge ? { label: t(dealBadge(badge).key), icon: dealBadge(badge).icon } : undefined}
+                extra={!isBest && q.labels.length > 1 ? <DealBadges labels={q.labels.slice(1)} /> : null}
+                tiles={
+                  <>
+                    <Tile label={t('eta')} icon="truck" badge={rows.length > 1 && q.maxDays === minDays ? <Pill label={t('fast_badge')} tone="green" icon="bolt" /> : null}>
+                      <DayRange min={q.minDays} max={q.maxDays} />
+                    </Tile>
+                    <Tile label={t('bde_total_cost')} badge={rows.length > 1 && q.comparableCost === minCost ? <Pill label={t('lowest')} tone="green" icon="tag" /> : null}>
+                      <Money amount={q.total.total} compact />
+                    </Tile>
+                  </>
+                }
+                meta={
+                  <View style={{ gap: 6 }}>
+                    {!q.total.complete ? <Meta icon="warn" text={t('bde_no_delivery')} /> : null}
+                    <Meta icon="shield" text={q.supplier.completedOrders > 0 ? t('completed_n', { n: q.supplier.completedOrders }) : t('new_supplier')} />
+                    <Meta icon="doc" text={`${t(`pt_${q.paymentTerms}` as StringKey)} · ${t('warranty')} ${q.warrantyMonths} ${t('mo')}`} />
+                    {q.quote.version > 1 ? <Meta icon="refresh" text={t('version_n', { n: q.quote.version })} /> : null}
+                    {q.quote.notes ? <Meta icon="chat" text={q.quote.notes} /> : null}
+                    <ScoreLink score={q.score} onPress={() => { track({ name: 'deal_score_opened', rfqId: id, quoteId: q.quoteId }); setSheet({ kind: 'score', q }); }} />
+                    {isBest && rec.best ? <WhyBest reasons={rec.best.reasons} /> : null}
+                  </View>
+                }
+                acceptLabel={q.status === 'AWARDED' ? t('qs_AWARDED') : t('accept')}
+                acceptDisabled={!canAward}
+                onAccept={() => {
+                  if (!isBest) track({ name: 'deal_alternative_selected', rfqId: id, quoteId: q.quoteId, label: q.labels[0] ?? 'none' });
+                  setSheet({ kind: 'accept', q, ok: false });
+                }}
+              />
+            );
+          })}
         </QueryState>
+
+        {setAside.length ? (
+          <Card style={{ padding: 14, gap: 10 }}>
+            <T style={{ fontWeight: '700', fontSize: 13.5 }}>{t('bde_set_aside')}</T>
+            {setAside.map((s) => (
+              <View key={s.offer.quoteId} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <T style={{ fontSize: 13, flex: 1 }}>{s.offer.supplier.name}</T>
+                <Pill label={t(s.why === 'expired' ? 'bde_expired' : 'bde_withdrawn')} tone="grey" />
+              </View>
+            ))}
+          </Card>
+        ) : null}
       </Screen>
 
       {sheet?.kind === 'score' ? (
@@ -207,6 +264,9 @@ export default function BuyerRfqDetail() {
               </View>
             );
           })}
+          <Note text={t('bde_weight_applied', { p: Math.round(sheet.q.weightApplied * 100) })} />
+          <T style={{ fontWeight: '700', fontSize: 13 }}>{t('bde_breakdown')}</T>
+          <TotalCostRow cost={sheet.q.total} />
           <Note text={t('sc_formula')} />
           <Btn label={t('close')} variant="ghost" small onPress={() => setSheet(null)} />
         </Sheet>
@@ -221,14 +281,14 @@ export default function BuyerRfqDetail() {
               <VerificationPill level={sheet.q.supplier.verification as VerificationLevel} />
             </View>
           </View>
+          <TotalCostRow cost={sheet.q.total} />
           <KV
             items={[
-              { label: t('total'), value: <Money amount={sheet.q.total_baisa} size={16} /> },
-              { label: t('unit'), value: <Money amount={sheet.q.unit_price_baisa} size={16} /> },
-              { label: t('eta'), value: <DayRange min={sheet.q.min_days} max={sheet.q.max_days} size={14} /> },
-              { label: t('terms'), value: t(`pt_${sheet.q.payment_terms}` as StringKey) },
-              { label: t('warranty'), value: `${sheet.q.warranty_months} ${t('mo')}` },
-              { label: t('valid_until'), value: sheet.q.valid_until ? formatDate(i18n, sheet.q.valid_until) : '—' },
+              { label: t('unit'), value: <Money amount={sheet.q.unitPrice} size={16} /> },
+              { label: t('eta'), value: <DayRange min={sheet.q.minDays} max={sheet.q.maxDays} size={14} /> },
+              { label: t('terms'), value: t(`pt_${sheet.q.paymentTerms}` as StringKey) },
+              { label: t('warranty'), value: `${sheet.q.warrantyMonths} ${t('mo')}` },
+              { label: t('valid_until'), value: sheet.q.validUntil ? formatDate(i18n, sheet.q.validUntil) : '—' },
             ]}
           />
           <Checkbox checked={sheet.ok} onChange={(ok) => setSheet({ ...sheet, ok })} label={t('cf_chk')} />
@@ -266,22 +326,40 @@ export default function BuyerRfqDetail() {
   );
 }
 
-function CompareTable({ quotes }: { quotes: Scored[] }) {
+/** Differences inside this request only. No market or historical baselines exist. */
+function SavingsCard({ savings }: { savings: NonNullable<ReturnType<typeof recommend>['savings']> }) {
+  const { t } = useI18n();
+  if (savings.vsHighest <= 0 && savings.vsAverage <= 0) return null;
+  return (
+    <Card style={{ padding: 14, gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Icon name="dollar" size={18} color={colors.green} />
+        <T style={{ fontWeight: '700', fontSize: 14 }}>{t('bde_savings')}</T>
+      </View>
+      {savings.vsHighest > 0 ? <T style={{ fontSize: 12.5, color: colors.ink2 }}>{t('bde_vs_highest', { a: formatMoney(savings.vsHighest, true) })}</T> : null}
+      {savings.vsAverage > 0 ? <T style={{ fontSize: 12.5, color: colors.ink2 }}>{t('bde_vs_avg', { a: formatMoney(savings.vsAverage, true) })}</T> : null}
+      <Note text={savings.complete ? t('bde_savings_note') : `${t('bde_savings_note')} ${t('bde_partial')}`} />
+    </Card>
+  );
+}
+
+function CompareTable({ quotes }: { quotes: Row[] }) {
   const { t } = useI18n();
   const best = {
     score: Math.max(...quotes.map((q) => q.score)),
-    total: Math.min(...quotes.map((q) => q.total_baisa)),
-    days: Math.min(...quotes.map((q) => q.max_days)),
-    warranty: Math.max(...quotes.map((q) => q.warranty_months)),
+    total: Math.min(...quotes.map((q) => q.comparableCost)),
+    days: Math.min(...quotes.map((q) => q.maxDays)),
+    warranty: Math.max(...quotes.map((q) => q.warrantyMonths)),
   };
   const good = (b: boolean) => (b ? { color: colors.green, fontWeight: '700' as const } : null);
-  const rows: { label: string; cell: (q: Scored) => React.ReactNode }[] = [
+  const rows: { label: string; cell: (q: Row) => React.ReactNode }[] = [
     { label: t('score_lbl'), cell: (q) => <Num style={[{ fontSize: 13 }, good(q.score === best.score)]}>{q.score}</Num> },
-    { label: t('total'), cell: (q) => <Money amount={q.total_baisa} size={13} color={q.total_baisa === best.total ? colors.green : colors.ink} /> },
-    { label: t('unit'), cell: (q) => <Money amount={q.unit_price_baisa} size={13} /> },
-    { label: t('eta'), cell: (q) => <DayRange min={q.min_days} max={q.max_days} size={13} /> },
-    { label: t('warranty'), cell: (q) => <T style={[{ fontSize: 13 }, good(q.warranty_months === best.warranty)]}>{`${q.warranty_months} ${t('mo')}`}</T> },
-    { label: t('terms'), cell: (q) => <T style={{ fontSize: 12.5 }}>{t(`pt_${q.payment_terms}` as StringKey)}</T> },
+    { label: t('bde_total_cost'), cell: (q) => <Money amount={q.total.total} size={13} color={q.comparableCost === best.total ? colors.green : colors.ink} /> },
+    { label: t('bde_delivery'), cell: (q) => (q.total.delivery == null ? <T style={{ fontSize: 11.5, color: colors.amberText }}>{t('bde_no_delivery')}</T> : <Money amount={q.total.delivery} size={13} />) },
+    { label: t('unit'), cell: (q) => <Money amount={q.unitPrice} size={13} /> },
+    { label: t('eta'), cell: (q) => <DayRange min={q.minDays} max={q.maxDays} size={13} /> },
+    { label: t('warranty'), cell: (q) => <T style={[{ fontSize: 13 }, good(q.warrantyMonths === best.warranty)]}>{`${q.warrantyMonths} ${t('mo')}`}</T> },
+    { label: t('terms'), cell: (q) => <T style={{ fontSize: 12.5 }}>{t(`pt_${q.paymentTerms}` as StringKey)}</T> },
     { label: t('verification'), cell: (q) => <VerificationPill level={q.supplier.verification as VerificationLevel} /> },
   ];
   return (
@@ -290,13 +368,13 @@ function CompareTable({ quotes }: { quotes: Scored[] }) {
         <View style={[st.tr, { backgroundColor: colors.tile }]}>
           <View style={st.th} />
           {quotes.map((q) => (
-            <View key={q.id} style={st.td}><T style={{ fontWeight: '700', fontSize: 12.5 }}>{q.supplier.name}</T></View>
+            <View key={q.quoteId} style={st.td}><T style={{ fontWeight: '700', fontSize: 12.5 }}>{q.supplier.name}</T></View>
           ))}
         </View>
         {rows.map((row, i) => (
           <View key={row.label} style={[st.tr, i === rows.length - 1 && { borderBottomWidth: 0 }]}>
             <View style={st.th}><T style={{ fontSize: 12, color: colors.muted }}>{row.label}</T></View>
-            {quotes.map((q) => <View key={q.id} style={st.td}>{row.cell(q)}</View>)}
+            {quotes.map((q) => <View key={q.quoteId} style={st.td}>{row.cell(q)}</View>)}
           </View>
         ))}
       </View>

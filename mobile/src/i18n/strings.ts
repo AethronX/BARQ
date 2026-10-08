@@ -95,6 +95,23 @@ const ar = {
   err_too_many_revisions: 'وصلت للحد الأقصى من التعديلات على هذا العرض.', err_already_awarded: 'تمت ترسية هذا الطلب على عرض آخر.', err_quote_unavailable: 'هذا العرض لم يعد متاحاً.',
   err_quote_expired: 'انتهت صلاحية هذا العرض.', err_invalid_level: 'مستوى توثيق غير صالح.',
   d_1: 'يوم', d_2: 'يومان', d_few: 'أيام', d_many: 'يوماً',
+  // best deal engine
+  bde_best: 'أفضل صفقة', bde_cheapest: 'أقل سعر', bde_fastest: 'أسرع توصيل', bde_top_rated: 'أعلى تقييم',
+  bde_why: 'لماذا هذه أفضل صفقة؟', bde_why_note: 'الأسباب مبنية على بيانات العرض فقط. ما لا تتوفر عنه بيانات لا يُذكر.',
+  bde_r_cheapest: 'أقل تكلفة إجمالية بين العروض', bde_r_fastest: 'أسرع مدة تسليم بين العروض',
+  bde_r_cheaper_avg: 'أقل من متوسط العروض بمقدار {a}', bde_r_verified: 'مورد موثّق ({lvl})',
+  bde_r_completed: 'أنجز {n} طلباً على بارق', bde_r_warranty: 'ضمان {n} شهراً', bde_r_terms: 'شروط دفع مريحة: {t}',
+  bde_r_nodata: 'لا توجد بيانات كافية للتقييم',
+  bde_total_cost: 'التكلفة الإجمالية', bde_goods: 'قيمة الأصناف', bde_delivery: 'التوصيل', bde_fees: 'رسوم إضافية', bde_discount: 'خصم',
+  bde_no_delivery: 'تكلفة التوصيل غير محسوبة', bde_partial: 'المقارنة على قيمة الأصناف فقط، دون التوصيل.',
+  bde_savings: 'الفرق بين العروض', bde_vs_highest: 'أقل من أعلى عرض بمقدار {a}', bde_vs_avg: 'أقل من المتوسط بمقدار {a}',
+  bde_savings_note: 'محسوب من عروض هذا الطلب فقط، وليس من أسعار السوق.',
+  bde_decisions: 'طلبات تحتاج قرارك', bde_decisions_s: 'طلبات وصلتها عروض وتنتظر اختيارك.',
+  bde_offers_n: '{n} عرضاً', bde_set_aside: 'عروض خارج المقارنة', bde_expired: 'انتهت صلاحيته', bde_withdrawn: 'مسحوب',
+  bde_single: 'عرض واحد فقط — لا توجد مقارنة بعد.', bde_breakdown: 'تفصيل النقاط',
+  fx_supplierQuality: 'جودة المورد', fx_deliverySpeed: 'سرعة التوصيل', fx_paymentTerms: 'شروط الدفع',
+  bde_weight_applied: 'الأوزان المطبَّقة: {p}% (العوامل بلا بيانات مستبعدة)',
+  bde_mock_logistics: 'بيانات توصيل تجريبية — ليست من ناقل حقيقي',
 } as const;
 
 export type StringKey = keyof typeof ar;
@@ -182,6 +199,22 @@ const en: Record<StringKey, string> = {
   err_too_many_revisions: 'You reached the maximum number of revisions for this quote.', err_already_awarded: 'This request was awarded to another quote.', err_quote_unavailable: 'This quote is no longer available.',
   err_quote_expired: 'This quote has expired.', err_invalid_level: 'Invalid verification level.',
   d_1: 'day', d_2: 'days', d_few: 'days', d_many: 'days',
+  bde_best: 'Best deal', bde_cheapest: 'Lowest price', bde_fastest: 'Fastest delivery', bde_top_rated: 'Top rated',
+  bde_why: 'Why is this the best deal?', bde_why_note: 'Reasons come from the quote data only. Anything we have no data for is not claimed.',
+  bde_r_cheapest: 'Lowest total cost among the quotes', bde_r_fastest: 'Fastest delivery among the quotes',
+  bde_r_cheaper_avg: '{a} below the average quote', bde_r_verified: 'Verified supplier ({lvl})',
+  bde_r_completed: 'Completed {n} orders on BARQ', bde_r_warranty: '{n}-month warranty', bde_r_terms: 'Favourable payment terms: {t}',
+  bde_r_nodata: 'Not enough data to assess',
+  bde_total_cost: 'Total cost', bde_goods: 'Goods', bde_delivery: 'Delivery', bde_fees: 'Additional fees', bde_discount: 'Discount',
+  bde_no_delivery: 'Delivery cost not calculated', bde_partial: 'Compared on goods only, delivery excluded.',
+  bde_savings: 'Difference between quotes', bde_vs_highest: '{a} below the highest quote', bde_vs_avg: '{a} below the average',
+  bde_savings_note: 'Computed from this request\'s quotes only, not from market prices.',
+  bde_decisions: 'Requests awaiting your decision', bde_decisions_s: 'Requests with quotes waiting for your choice.',
+  bde_offers_n: '{n} quotes', bde_set_aside: 'Quotes outside the comparison', bde_expired: 'Expired', bde_withdrawn: 'Withdrawn',
+  bde_single: 'Only one quote — nothing to compare yet.', bde_breakdown: 'Score breakdown',
+  fx_supplierQuality: 'Supplier quality', fx_deliverySpeed: 'Delivery speed', fx_paymentTerms: 'Payment terms',
+  bde_weight_applied: 'Weights applied: {p}% (factors without data excluded)',
+  bde_mock_logistics: 'Test delivery data — not from a real carrier',
 };
 
 export type Lang = 'ar' | 'en';

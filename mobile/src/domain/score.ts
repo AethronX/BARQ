@@ -1,72 +1,116 @@
 /**
  * BARQ Score — a published, transparent formula applied identically to every
- * quote. Paid plans or advertising have no input here by design.
+ * offer. Subscriptions, advertising and supplier spend have no input here, by
+ * design, and must never gain one.
  *
- * Factors without real data (e.g. a new supplier with no completed orders) are
- * left out and the remaining weights are re-normalised, so missing history is
- * never replaced by an invented number. Changing weights is a product decision
- * that must be versioned and announced.
+ * Two rules make the score honest:
+ *  1. A factor without real data (a supplier with no ratings yet) is EXCLUDED
+ *     and the remaining weights are re-normalised. A missing number is never
+ *     replaced by an invented one.
+ *  2. Price is compared on one basis for all offers. If any delivery cost is
+ *     unknown, every offer is compared on goods only, and the UI says so.
+ *
+ * Changing weights is a product decision: bump SCORE_VERSION and announce it.
  */
-import type { Baisa } from './money';
+import type { NormalizedOffer } from './offer';
+import { totalCost } from './offer.ts';
+import { TERMS_SCORE } from './terms.ts';
 
-export const SCORE_VERSION = 'v1';
+export const SCORE_VERSION = 'v2';
 
 export const SCORE_WEIGHTS = {
-  price: 0.35,
-  speed: 0.2,
-  rating: 0.15,
-  reliability: 0.15,
-  verification: 0.1,
-  terms: 0.05,
+  price: 0.4,
+  supplierQuality: 0.25,
+  deliverySpeed: 0.2,
+  rating: 0.1,
+  paymentTerms: 0.05,
 } as const;
 
 export type ScoreFactor = keyof typeof SCORE_WEIGHTS;
+export type ScoreWeights = Record<ScoreFactor, number>;
 
 /** 0 = unverified … 3 = fully verified. Set only by BARQ admins after real checks. */
 export type VerificationLevel = 0 | 1 | 2 | 3;
 
-export interface ScoreInput {
-  unitPrice: Baisa;
-  /** Worst-case delivery in days (we score the promise, not the best case). */
-  maxDays: number;
-  /** 0–5, or null when the supplier has no ratings yet. */
-  rating: number | null;
-  /** 0–100 share of orders delivered on time, or null without history. */
-  onTimeRate: number | null;
-  verification: VerificationLevel;
-  /** 0–1, how favourable the payment terms are to the buyer. */
-  termsScore: number;
-}
+/** Completed orders beyond this add no further quality signal. */
+export const EXPERIENCE_CAP = 10;
 
 export interface ScoreResult {
   score: number; // 0–100
   /** Each 0–1, or null when the factor had no data and was excluded. */
   factors: Record<ScoreFactor, number | null>;
+  /** Sum of the weights that actually applied (1 when nothing was excluded). */
+  weightApplied: number;
+  version: string;
 }
+
+export type ScoredOffer = NormalizedOffer & ScoreResult & {
+  /** Comparable cost used by the price factor, on the basis below. */
+  comparableCost: number;
+  total: ReturnType<typeof totalCost>;
+};
+
+/** 'total' = every delivery cost known; 'goods_only' = at least one unknown. */
+export type CostBasis = 'total' | 'goods_only';
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
-export function scoreQuotes<T extends ScoreInput>(quotes: readonly T[]): (T & ScoreResult)[] {
-  if (quotes.length === 0) return [];
-  const minPrice = Math.min(...quotes.map((q) => q.unitPrice));
-  const minDays = Math.min(...quotes.map((q) => q.maxDays));
-  return quotes.map((q) => {
+/** Verification plus real BARQ history. Both components always exist (0 is a real 0). */
+export function supplierQuality(verification: VerificationLevel, completedOrders: number): number {
+  const experience = clamp01(Math.max(0, completedOrders) / EXPERIENCE_CAP);
+  return clamp01(0.6 * (verification / 3) + 0.4 * experience);
+}
+
+export function costBasis(offers: readonly NormalizedOffer[]): CostBasis {
+  return offers.every((o) => o.deliveryCost != null) ? 'total' : 'goods_only';
+}
+
+export function scoreOffers(
+  offers: readonly NormalizedOffer[],
+  weights: ScoreWeights = SCORE_WEIGHTS,
+): { offers: ScoredOffer[]; basis: CostBasis } {
+  const basis = costBasis(offers);
+  if (offers.length === 0) return { offers: [], basis };
+
+  const prepared = offers.map((o) => {
+    const total = totalCost(o);
+    return { o, total, comparableCost: Math.max(1, basis === 'total' ? total.total : o.goodsTotal) };
+  });
+  const minCost = Math.min(...prepared.map((p) => p.comparableCost));
+  const minDays = Math.min(...prepared.map((p) => Math.max(1, p.o.maxDays)));
+
+  const scored = prepared.map(({ o, total, comparableCost }) => {
     const factors: Record<ScoreFactor, number | null> = {
-      price: clamp01(minPrice / q.unitPrice),
-      speed: clamp01(minDays / q.maxDays),
-      rating: q.rating == null ? null : clamp01(q.rating / 5),
-      reliability: q.onTimeRate == null ? null : clamp01(q.onTimeRate / 100),
-      verification: clamp01(q.verification / 3),
-      terms: clamp01(q.termsScore),
+      price: clamp01(minCost / comparableCost),
+      supplierQuality: supplierQuality(o.supplier.verification, o.supplier.completedOrders),
+      deliverySpeed: clamp01(minDays / Math.max(1, o.maxDays)),
+      rating: o.rating == null ? null : clamp01(o.rating / 5),
+      paymentTerms: clamp01(TERMS_SCORE[o.paymentTerms]),
     };
     let weighted = 0;
     let weightSum = 0;
-    for (const k of Object.keys(SCORE_WEIGHTS) as ScoreFactor[]) {
+    for (const k of Object.keys(weights) as ScoreFactor[]) {
       const f = factors[k];
-      if (f == null) continue;
-      weighted += SCORE_WEIGHTS[k] * f;
-      weightSum += SCORE_WEIGHTS[k];
+      if (f == null || weights[k] <= 0) continue;
+      weighted += weights[k] * f;
+      weightSum += weights[k];
     }
-    return { ...q, factors, score: Math.round((weighted / weightSum) * 100) };
+    const score = weightSum > 0 ? Math.round((weighted / weightSum) * 100) : 0;
+    return { ...o, factors, score, weightApplied: weightSum, version: SCORE_VERSION, comparableCost, total };
   });
+
+  return { offers: scored, basis };
+}
+
+/**
+ * Ranking order: score, then lower cost, then faster promise, then id.
+ * Fully deterministic so two devices never disagree about the recommendation.
+ */
+export function compareScored(a: ScoredOffer, b: ScoredOffer): number {
+  return (
+    b.score - a.score ||
+    a.comparableCost - b.comparableCost ||
+    a.maxDays - b.maxDays ||
+    a.quoteId.localeCompare(b.quoteId)
+  );
 }

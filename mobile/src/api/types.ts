@@ -12,8 +12,6 @@ export const CATEGORIES: Category[] = ['c_hvac', 'c_pipes', 'c_elec', 'c_safety'
 export const UNITS: Unit[] = ['u_pcs', 'u_box', 'u_m', 'u_ton'];
 export const LOCATIONS: Location[] = ['l_seeb', 'l_bawshar', 'l_muttrah', 'l_amerat', 'l_qurayyat', 'l_muscat', 'l_rusayl', 'l_ghala'];
 export const PAYMENT_TERMS: PaymentTerms[] = ['NET_60', 'NET_30', 'ADVANCE_30', 'ADVANCE_50', 'ADVANCE_100'];
-/** How favourable each payment term is to the buyer (input to the BARQ Score). */
-export const TERMS_SCORE: Record<PaymentTerms, number> = { NET_60: 1, NET_30: 0.85, ADVANCE_30: 0.6, ADVANCE_50: 0.5, ADVANCE_100: 0.2 };
 
 export interface Profile {
   id: string;

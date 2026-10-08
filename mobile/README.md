@@ -75,3 +75,16 @@ src/
   i18n/       all strings (ar/en)
   ui/         design tokens and components
 ```
+
+## Best Deal Engine
+
+Buyer-side decision support (`src/domain/offer.ts`, `score.ts`, `recommend.ts`).
+Design and rationale: `../docs/BARQ_BEST_DEAL_ENGINE.md`.
+
+- `EXPO_PUBLIC_MOCK_LOGISTICS=false` (default). Setting it to `true` enables the
+  **fake** carrier quotes in `src/logistics/` for internal testing only. BARQ has
+  no carrier agreement; the mock names no real carrier and every quote it
+  produces is tagged `MOCK`. With it off, delivery cost stays unknown and the
+  app says so ("تكلفة التوصيل غير محسوبة").
+- Changing the score weights in `src/domain/score.ts` is a product decision:
+  bump `SCORE_VERSION` and announce it, since buyers see the weights in-app.

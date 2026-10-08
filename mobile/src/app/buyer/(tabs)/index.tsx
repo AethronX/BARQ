@@ -11,6 +11,7 @@ import { RfqRow } from '../../../ui/RfqRow';
 import { QueryState } from '../../../ui/states';
 import { notifText } from '../../../ui/format';
 import { PendingNotice, RoleHeader } from '../../../screens/common';
+import { DecisionsSection } from '../../../screens/DecisionsSection';
 import { colors, shadow } from '../../../ui/theme';
 
 function Kpi({ icon, value, label, to }: { icon: IconName; value: number | string; label: StringKey; to: Href }) {
@@ -70,6 +71,7 @@ export default function BuyerHome() {
         </View>
         <View style={{ marginTop: -54, paddingHorizontal: 14, gap: 14 }}>
           {!verified ? <PendingNotice /> : null}
+          <DecisionsSection rfqs={rfqs.data} />
           <View style={st.panel}>
             <SectionTitle icon="doc" title={t('my_rfqs')} action={{ label: t('see_all'), onPress: () => router.navigate('/buyer/rfqs') }} />
             <QueryState isPending={rfqs.isPending} error={rfqs.error} onRetry={() => rfqs.refetch()} isEmpty={!rfqs.data?.length} empty={<EmptyState icon="doc" title={t('no_rfqs')} body={t('no_rfqs_s')} />}>
