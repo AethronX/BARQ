@@ -16,7 +16,10 @@ export default function Verify() {
   const d = useDir();
   const insets = useSafeAreaInsets();
   const { email } = useLocalSearchParams<{ email: string }>();
-  const { session, verifyCode, sendCode } = useAuth();
+  const { session, verifyCode, verifyLink, sendCode } = useAuth();
+  const [link, setLink] = useState('');
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkBusy, setLinkBusy] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -47,6 +50,20 @@ export default function Verify() {
       setError(t(errorKey(err)));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const submitLink = async () => {
+    if (linkBusy || !link.trim()) return;
+    setLinkBusy(true);
+    setLinkError(null);
+    try {
+      await verifyLink(link.trim());
+      router.replace('/');
+    } catch (err) {
+      setLinkError(t(errorKey(err)));
+    } finally {
+      setLinkBusy(false);
     }
   };
 
@@ -98,6 +115,25 @@ export default function Verify() {
               <T style={{ color: wait > 0 ? colors.muted : colors.blue, fontWeight: '600', fontSize: 13 }}>{wait > 0 ? t('resend_in', { s: wait }) : t('resend')}</T>
             </Pressable>
           </View>
+        </View>
+        <View style={[authStyles.card, { gap: 10 }]}>
+          <T style={{ fontWeight: '700', fontSize: 15 }}>{t('link_t')}</T>
+          <T style={{ fontSize: 12.5, color: colors.muted }}>{t('link_s')}</T>
+          <View style={[authStyles.input, linkError && { borderColor: colors.error }]}>
+            <TextInput
+              value={link}
+              onChangeText={(v) => { setLink(v); setLinkError(null); }}
+              placeholder={t('link_ph')}
+              placeholderTextColor="#94A3B8"
+              autoCapitalize="none"
+              autoCorrect={false}
+              multiline
+              style={[authStyles.textInput, { textAlign: 'left', writingDirection: 'ltr', fontSize: 13, maxHeight: 90 }]}
+              accessibilityLabel={t('link_ph')}
+            />
+          </View>
+          {linkError ? <T style={{ color: colors.error, fontSize: 12.5 }} accessibilityLiveRegion="polite">{linkError}</T> : null}
+          <Btn label={t('link_go')} variant="navy" small loading={linkBusy} onPress={submitLink} />
         </View>
       </ScrollView>
       <Toast message={toast} onHide={() => setToast(null)} />

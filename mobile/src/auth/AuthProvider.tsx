@@ -15,6 +15,8 @@ interface AuthState {
   profileError: unknown;
   sendCode: (email: string) => Promise<void>;
   verifyCode: (email: string, code: string) => Promise<void>;
+  /** Sign in with the link from the email (copied, or the page it opened). */
+  verifyLink: (text: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -62,6 +64,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const verifyLink = useCallback(async (text: string) => {
+    const get = (k: string) => {
+      const m = text.match(new RegExp(`[?&#]${k}=([^&#\\s]+)`));
+      return m ? decodeURIComponent(m[1]) : null;
+    };
+    // Case 1: the link was already opened; the redirect URL carries the session.
+    const access = get('access_token');
+    const refresh = get('refresh_token');
+    if (access && refresh) {
+      const { error } = await supabase.auth.setSession({ access_token: access, refresh_token: refresh });
+      if (error) throw error;
+      return;
+    }
+    // Case 2: the unopened link from the email (…/auth/v1/verify?token=…&type=…).
+    const tokenHash = get('token_hash') ?? get('token');
+    const type = get('type') ?? 'magiclink';
+    if (!tokenHash || !/^[A-Za-z0-9_-]{10,}$/.test(tokenHash)) throw new Error('invalid_link');
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as 'magiclink' });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     qc.clear();
@@ -81,10 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profileError: profileQ.error,
       sendCode,
       verifyCode,
+      verifyLink,
       signOut,
       refresh,
     }),
-    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, signOut, refresh],
+    [initializing, session, uid, profileQ.data, profileQ.isPending, profileQ.error, sendCode, verifyCode, verifyLink, signOut, refresh],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -4,7 +4,7 @@ import type { StringKey } from '../i18n/strings';
 const KNOWN = [
   'not_authenticated', 'forbidden', 'not_found', 'invalid_role', 'categories_required', 'company_not_verified',
   'invalid_required_by', 'invalid_closing', 'rate_limited', 'rfq_closed', 'invalid_validity', 'invalid_transition',
-  'too_many_revisions', 'already_awarded', 'quote_unavailable', 'quote_expired', 'invalid_level',
+  'too_many_revisions', 'already_awarded', 'quote_unavailable', 'quote_expired', 'invalid_level', 'invalid_link',
 ] as const;
 
 /** Maps any thrown error to a human-readable i18n key; technical details stay in logs. */

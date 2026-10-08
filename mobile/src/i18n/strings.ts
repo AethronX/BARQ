@@ -12,6 +12,8 @@ const ar = {
   resend: 'إعادة إرسال الرمز', resend_in: 'إعادة الإرسال بعد {s} ث', change_email: 'تغيير البريد', code_sent: 'تم إرسال الرمز',
   terms_note: 'بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.',
   e_email: 'أدخل بريداً إلكترونياً صحيحاً', e_code: 'أدخل الرمز المكوّن من 6 أرقام',
+  link_t: 'وصلك رابط بدل الرمز؟', link_s: 'في البريد، اضغط مطولاً على رابط الدخول واختر «نسخ الرابط» ثم الصقه هنا. إذا فتحته بالخطأ، انسخ عنوان الصفحة التي فُتحت والصقه.',
+  link_ph: 'الصق الرابط هنا', link_go: 'الدخول بالرابط', err_invalid_link: 'الرابط غير صحيح. انسخ رابط الدخول كاملاً من البريد.',
   // onboarding
   ob_t: 'أكمل بيانات شركتك', ob_s: 'نحتاج هذه البيانات للتحقق من شركتك قبل التداول.', ob_role: 'نوع الحساب',
   role_buyer: 'مشترٍ', role_buyer_s: 'أطلب عروض أسعار من الموردين', role_supplier: 'مورد', role_supplier_s: 'أستقبل الطلبات وأقدّم عروضي',
@@ -106,6 +108,8 @@ const en: Record<StringKey, string> = {
   resend: 'Resend code', resend_in: 'Resend in {s}s', change_email: 'Change email', code_sent: 'Code sent',
   terms_note: 'By continuing you agree to the Terms of Use and Privacy Policy.',
   e_email: 'Enter a valid email address', e_code: 'Enter the 6-digit code',
+  link_t: 'Got a link instead of a code?', link_s: 'In the email, long-press the sign-in link, choose "Copy link" and paste it here. If you opened it by mistake, copy the address of the page that opened and paste it.',
+  link_ph: 'Paste the link here', link_go: 'Sign in with link', err_invalid_link: 'Invalid link. Copy the full sign-in link from the email.',
   ob_t: 'Complete your company details', ob_s: 'We need these details to verify your company before trading.', ob_role: 'Account type',
   role_buyer: 'Buyer', role_buyer_s: 'I request quotes from suppliers', role_supplier: 'Supplier', role_supplier_s: 'I receive requests and submit quotes',
   full_name: 'Full name', company_name: 'Company name', city: 'City', cr_number: 'Commercial registration no.', phone: 'Phone', optional: 'optional',
