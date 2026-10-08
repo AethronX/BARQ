@@ -16,6 +16,7 @@ import { QueryState } from '../../ui/states';
 import { colors } from '../../ui/theme';
 import { OrderStatusPill } from '../../screens/common';
 import { RoleGate } from '../../screens/RoleGate';
+import { AdminOrderOverride } from '../../screens/AdminOverride';
 
 /** Next step each party may take (mirrors advance_order on the server). */
 const SUPPLIER_NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -105,6 +106,7 @@ function OrderDetail() {
                 <Note text={isBuyer ? t('waiting_supplier') : t('waiting_buyer')} icon="clock" />
               ) : null}
               <Note text={`${t('dispute')} ${t('dispute_s')}`} icon="help" />
+              {profile?.role === 'admin' ? <AdminOrderOverride orderId={o.id} current={o.status} onToast={setToast} /> : null}
             </>
           ) : null}
         </QueryState>

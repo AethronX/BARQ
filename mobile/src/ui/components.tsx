@@ -477,7 +477,7 @@ export const s = StyleSheet.create({
   box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: '#94A3B8', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
   kv: { flexGrow: 1, flexBasis: '45%', backgroundColor: colors.tile, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 2 },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(2,6,23,0.5)' },
-  sheet: { position: 'absolute', bottom: 0, start: 0, end: 0, backgroundColor: colors.card, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, gap: 14 },
+  sheet: { position: 'absolute', bottom: 0, start: 0, end: 0, backgroundColor: colors.card, borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 18, paddingTop: 10, gap: 14, ...shadow.raised },
   grab: { width: 42, height: 5, borderRadius: 3, backgroundColor: '#D5DCE6', alignSelf: 'center' },
   toast: { position: 'absolute', start: 16, end: 16, bottom: 24, backgroundColor: colors.navy, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, ...shadow.card },
 });

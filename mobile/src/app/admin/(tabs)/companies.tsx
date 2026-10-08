@@ -3,6 +3,7 @@ import { Pressable, TextInput, View } from 'react-native';
 import { useI18n } from '../../../i18n/I18nProvider';
 import type { StringKey } from '../../../i18n/strings';
 import { useAllCompanies, useSetVerification } from '../../../api/queries';
+import { AdminCompanySheet } from '../../../screens/AdminControl';
 import { errorKey } from '../../../api/errors';
 import type { Company } from '../../../api/types';
 import { Btn, Card, Checkbox, CompanyLogo, EmptyState, Note, Screen, Sheet, T, Toast, VerificationPill } from '../../../ui/components';
@@ -20,6 +21,7 @@ export default function AdminCompanies() {
   const setLevel = useSetVerification();
   const [pendingOnly, setPendingOnly] = useState(true);
   const [edit, setEdit] = useState<{ c: Company; level: VerificationLevel; note: string } | null>(null);
+  const [manage, setManage] = useState<Company | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const rows = (q.data ?? []).filter((c) => !pendingOnly || c.verification === 0);
 
@@ -39,7 +41,12 @@ export default function AdminCompanies() {
                   </T>
                   {c.categories.length ? <T style={{ fontSize: 12, color: colors.muted }}>{c.categories.map((x) => t(x as StringKey)).join('، ')}</T> : null}
                 </View>
-                <VerificationPill level={c.verification} />
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <VerificationPill level={c.verification} />
+                  <Pressable onPress={() => setManage(c)} accessibilityRole="button" hitSlop={8} style={{ minHeight: 28, justifyContent: 'center' }}>
+                    <T style={{ fontSize: 12, fontWeight: '700', color: colors.blue }}>{t('a_manage')}</T>
+                  </Pressable>
+                </View>
               </Card>
             </Pressable>
           ))}
@@ -77,6 +84,7 @@ export default function AdminCompanies() {
           <Btn label={t('cancel')} variant="ghost" small onPress={() => setEdit(null)} />
         </Sheet>
       ) : null}
+      {manage ? <AdminCompanySheet company={manage} onClose={() => setManage(null)} onToast={setToast} /> : null}
       <Toast message={toast} onHide={() => setToast(null)} />
     </>
   );

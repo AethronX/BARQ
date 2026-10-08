@@ -9,10 +9,11 @@ export const colors = {
   amberSoft: '#FEF4DF',
   amberInk: '#1A1204',
   amberText: '#9A5B00',
-  bg: '#F4F6FA',
+  bg: '#F8FAFC',
   card: '#FFFFFF',
-  tile: '#F5F7FB',
-  line: '#E5EAF1',
+  tile: '#F4F7FB',
+  line: '#E8EDF4',
+  hair: '#EFF3F8',
   ink: '#0F172A',
   ink2: '#334155',
   muted: '#7B8798',
@@ -30,7 +31,7 @@ export const colors = {
 } as const;
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 } as const;
-export const radius = { sm: 10, md: 14, lg: 18, xl: 22, pill: 999 } as const;
+export const radius = { sm: 10, md: 14, lg: 20, xl: 24, pill: 999 } as const;
 
 export const type = {
   h1: { fontSize: 24, fontWeight: '700' },
@@ -41,13 +42,25 @@ export const type = {
   tiny: { fontSize: 11 },
 } as const;
 
+/**
+ * Light, premium elevation: a wide, very faint shadow reads as paper lifted off
+ * a page, where a tight dark one reads as a drop shadow from the 2000s.
+ */
 export const shadow = {
   card: {
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#0B1220',
+    shadowOpacity: 0.045,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 2,
+  },
+  /** For surfaces that should float above the page: sheets, hero panels. */
+  raised: {
+    shadowColor: '#0B1220',
+    shadowOpacity: 0.08,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
   },
 } as const;
 

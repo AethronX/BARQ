@@ -189,6 +189,11 @@ export function MoreScreen() {
             </View>
           </Card>
         ) : null}
+        {profile?.role === 'admin' ? (
+          <Card style={{ paddingHorizontal: 16 }}>
+            <Row icon="users" label={t('a_users')} sub={t('a_role_note')} onPress={() => router.push('/admin/users')} last />
+          </Card>
+        ) : null}
         <Card style={{ paddingHorizontal: 16 }}>
           <Row icon="globe" label={t('lang')} right={<View style={{ flexDirection: 'row', borderWidth: 1, borderColor: colors.line, borderRadius: 12, padding: 3, direction: 'ltr' }}>{[seg('ar', 'العربية'), seg('en', 'English')]}</View>} />
           <Row icon="help" label={t('help')} sub={t('help_v')} />

@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { unwrap } from './errors';
-import type { AuditEntry, Company, Notification, Order, OrderEvent, OrderStatus, PaymentTerms, Quote, Rfq, SupplierRfq } from './types';
+import type { AuditEntry, Company, Notification, Order, OrderEvent, OrderStatus, PaymentTerms, Profile, Quote, Rfq, RfqStatus, Role, SupplierRfq } from './types';
 
 export type RfqWithCount = Rfq & { quotes: { count: number }[] };
 export type QuoteWithSupplier = Quote & { supplier: Pick<Company, 'id' | 'name' | 'verification' | 'city' | 'created_at'> };
@@ -286,4 +286,122 @@ export function useAuditLog() {
     queryKey: ['audit'],
     queryFn: async () => unwrap(await supabase.from('audit_log').select('*').order('created_at', { ascending: false }).limit(100)) as AuditEntry[],
   });
+}
+
+/* ------------------------- admin: statistics ---------------------------- */
+
+export interface AdminStats {
+  window_days: number;
+  generated_at: string;
+  totals: { buyers: number; suppliers: number; pending_verification: number; deleted: number };
+  rfq_totals: { all: number; open: number; awarded: number; cancelled: number };
+  order_totals: { all: number; active: number; completed: number; cancelled: number; gmv_baisa: number; avg_order_baisa: number | null };
+  funnel: { rfqs: number; quoted: number; awarded: number; completed: number };
+  series: { day: string; rfqs: number; quotes: number; orders: number; gmv_baisa: number }[];
+  categories: { category: string; rfqs: number; quotes: number; awarded: number }[];
+  health: {
+    avg_quotes_per_rfq: number | null;
+    rfqs_without_quotes: number;
+    avg_hours_to_first_quote: number | null;
+    avg_hours_to_award: number | null;
+    award_rate_pct: number | null;
+    completion_rate_pct: number | null;
+  };
+  verification_mix: Record<string, number>;
+  top_suppliers: { company_id: string; name: string; verification: number; quotes: number; won: number; win_rate_pct: number | null; gmv_baisa: number }[];
+  pending_deletions: number;
+}
+
+export function useAdminStats(days: number) {
+  return useQuery({
+    queryKey: ['admin-stats', days],
+    queryFn: async () => unwrap(await supabase.rpc('admin_stats', { p_days: days })) as AdminStats,
+  });
+}
+
+/* --------------------------- admin: control ----------------------------- */
+
+/** Everything below is re-checked server-side and written to the audit log. */
+function useAdminMutation<TInput, TResult>(fn: (i: TInput) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      for (const key of ['companies', 'admin-overview', 'admin-stats', 'admin-profiles', 'audit', 'rfqs', 'orders', 'quotes']) {
+        qc.invalidateQueries({ queryKey: [key] });
+      }
+    },
+  });
+}
+
+export interface AdminProfile extends Profile {
+  company: Pick<Company, 'id' | 'name' | 'kind'> | null;
+}
+
+export function useAdminProfiles() {
+  return useQuery({
+    queryKey: ['admin-profiles'],
+    queryFn: async () =>
+      unwrap(
+        await supabase.from('profiles').select('*, company:companies(id, name, kind)').order('created_at', { ascending: false }).limit(500),
+      ) as AdminProfile[],
+  });
+}
+
+export function useAdminUpdateCompany() {
+  return useAdminMutation(async (v: { companyId: string; name?: string; crNumber?: string; city?: string; categories?: string[] }) =>
+    unwrap(
+      await supabase.rpc('admin_update_company', {
+        p_company_id: v.companyId, p_name: v.name ?? undefined, p_cr_number: v.crNumber ?? undefined,
+        p_city: v.city ?? undefined, p_categories: v.categories ?? undefined,
+      }),
+    ) as Company,
+  );
+}
+
+export function useAdminSetRole() {
+  return useAdminMutation(async (v: { userId: string; role: Role; reason: string }) =>
+    unwrap(await supabase.rpc('admin_set_role', { p_user_id: v.userId, p_role: v.role, p_reason: v.reason })) as Profile,
+  );
+}
+
+export function useAdminForceRfqStatus() {
+  return useAdminMutation(async (v: { rfqId: string; status: RfqStatus; reason: string }) =>
+    unwrap(await supabase.rpc('admin_force_rfq_status', { p_rfq_id: v.rfqId, p_status: v.status, p_reason: v.reason })) as Rfq,
+  );
+}
+
+export function useAdminForceOrderStatus() {
+  return useAdminMutation(async (v: { orderId: string; status: OrderStatus; reason: string }) =>
+    unwrap(await supabase.rpc('admin_force_order_status', { p_order_id: v.orderId, p_status: v.status, p_reason: v.reason })) as Order,
+  );
+}
+
+export type AdminEntity = 'company' | 'rfq' | 'quote';
+
+export function useAdminSoftDelete() {
+  return useAdminMutation(async (v: { entity: AdminEntity; id: string; reason: string }) =>
+    unwrap(await supabase.rpc('admin_soft_delete', { p_entity: v.entity, p_id: v.id, p_reason: v.reason })) as null,
+  );
+}
+
+export function useAdminRestore() {
+  return useAdminMutation(async (v: { entity: AdminEntity; id: string }) =>
+    unwrap(await supabase.rpc('admin_restore', { p_entity: v.entity, p_id: v.id })) as null,
+  );
+}
+
+/** Permanent. Refused by the server for a company that carries orders. */
+export function useAdminPurgeCompany() {
+  return useAdminMutation(async (v: { companyId: string; reason: string }) =>
+    unwrap(await supabase.rpc('admin_purge_company', { p_company_id: v.companyId, p_reason: v.reason })) as {
+      name: string; rfqs: number; quotes: number; users_detached: number;
+    },
+  );
+}
+
+export function useAdminAnonymizeProfile() {
+  return useAdminMutation(async (v: { userId: string; reason: string }) =>
+    unwrap(await supabase.rpc('admin_anonymize_profile', { p_user_id: v.userId, p_reason: v.reason })) as Profile,
+  );
 }

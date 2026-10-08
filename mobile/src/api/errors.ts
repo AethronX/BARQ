@@ -5,6 +5,8 @@ const KNOWN = [
   'not_authenticated', 'forbidden', 'not_found', 'invalid_role', 'categories_required', 'company_not_verified',
   'invalid_required_by', 'invalid_closing', 'rate_limited', 'rfq_closed', 'invalid_validity', 'invalid_transition',
   'too_many_revisions', 'already_awarded', 'quote_unavailable', 'quote_expired', 'invalid_level', 'invalid_link', 'demo_unavailable',
+  'reason_required', 'invalid_entity', 'has_orders', 'cannot_change_own_role', 'cannot_delete_own_company',
+  'cannot_anonymize_self', 'audit_log_is_append_only',
 ] as const;
 
 /** Maps any thrown error to a human-readable i18n key; technical details stay in logs. */

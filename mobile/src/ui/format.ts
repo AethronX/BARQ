@@ -36,6 +36,7 @@ export function rfqRef(n: number): string {
 const KINDS = new Set([
   'rfq_new', 'quote_new', 'quote_updated', 'quote_withdrawn', 'quote_awarded', 'quote_not_selected',
   'rfq_cancelled', 'order_status', 'verification_changed', 'admin_deletion_request',
+  'admin_rfq_status', 'admin_order_status',
 ]);
 
 /** Renders a server notification in the current language. */
@@ -43,7 +44,8 @@ export function notifText(i18n: I18n, n: Notification): string {
   if (!KINDS.has(n.kind)) return i18n.t('nk_unknown');
   const p: Record<string, string> = {};
   for (const [k, v] of Object.entries(n.params ?? {})) p[k] = v == null ? '' : String(v);
-  if (n.kind === 'order_status' && p.status) p.status = i18n.t(`os_${p.status}` as StringKey);
+  if ((n.kind === 'order_status' || n.kind === 'admin_order_status') && p.status) p.status = i18n.t(`os_${p.status}` as StringKey);
+  if (n.kind === 'admin_rfq_status' && p.status) p.status = i18n.t(`rs_${p.status}` as StringKey);
   if (n.kind === 'verification_changed' && p.level) p.level = i18n.t(`v${p.level}` as StringKey);
   return i18n.t(`nk_${n.kind}` as StringKey, p);
 }
