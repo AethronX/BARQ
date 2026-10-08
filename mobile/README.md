@@ -33,6 +33,20 @@ If Expo Go shows "could not connect to the server":
 
 `npm run web` opens the same app in a desktop browser.
 
+## Open on the phone without the laptop (EAS Update)
+One-time setup on the PC (free Expo account):
+```bash
+npm install -g eas-cli
+eas login
+eas init          # creates the Expo project and writes its id into app.json
+npm run publish   # uploads the current version
+```
+On the phone: sign in to Expo Go with the same account. The project appears there, or open the update from expo.dev → project → Updates → Preview. Expo Go loads the latest published version each time; no laptop or shared network needed.
+
+To ship a new version later: `git pull`, `npm install`, `npm run publish`.
+
+Note: the published bundle contains the public `.env` values, including the demo test accounts. Treat the update link as internal.
+
 ## Trying the full flow
 1. Sign in with email A and choose **Buyer**.
 2. On a second phone (or after signing out), sign in with email B and choose **Supplier**. Pick the same category.
