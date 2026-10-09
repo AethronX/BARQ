@@ -405,3 +405,29 @@ export function useAdminAnonymizeProfile() {
     unwrap(await supabase.rpc('admin_anonymize_profile', { p_user_id: v.userId, p_reason: v.reason })) as Profile,
   );
 }
+
+/* --------------------------- supplier profile --------------------------- */
+
+export interface SupplierProfile {
+  company: Company;
+  /** Completed and total orders on BARQ. Real counts, or zero. */
+  stats: { completed_orders: number; total_orders: number } | null;
+}
+
+/**
+ * A supplier's public profile. RLS already decides what the caller may read,
+ * so this is a plain select; nothing here is enriched or inferred.
+ */
+export function useSupplierProfile(companyId: string | undefined) {
+  return useQuery({
+    queryKey: ['supplier-profile', companyId],
+    enabled: !!companyId,
+    queryFn: async (): Promise<SupplierProfile> => {
+      const company = unwrap(await supabase.from('companies').select('*').eq('id', companyId!).single()) as Company;
+      const rows = unwrap(await supabase.rpc('supplier_stats', { p_company_ids: [companyId!] })) as {
+        company_id: string; completed_orders: number; total_orders: number;
+      }[];
+      return { company, stats: rows[0] ?? null };
+    },
+  });
+}

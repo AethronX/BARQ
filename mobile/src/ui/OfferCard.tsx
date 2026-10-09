@@ -25,6 +25,7 @@ export function OfferCard({
   acceptDisabled,
   acceptIcon = 'bolt',
   footer,
+  onPressName,
 }: {
   name: string;
   verified?: boolean;
@@ -39,6 +40,8 @@ export function OfferCard({
   acceptDisabled?: boolean;
   acceptIcon?: IconName;
   footer?: ReactNode;
+  /** Opens the supplier's profile. Omitted where there is no profile to open. */
+  onPressName?: () => void;
 }) {
   const { t } = useI18n();
   return (
@@ -47,10 +50,17 @@ export function OfferCard({
       <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
         <CompanyLogo name={name} size={50} />
         <View style={{ flex: 1, gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-            <T style={{ fontSize: 15, fontWeight: '700', flexShrink: 1 }}>{name}</T>
+          <Pressable
+            onPress={onPressName}
+            disabled={!onPressName}
+            accessibilityRole={onPressName ? 'link' : undefined}
+            accessibilityLabel={onPressName ? `${name} — ${t('sp_title')}` : undefined}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap', minHeight: onPressName ? 32 : undefined }}
+          >
+            <T style={{ fontSize: 15, fontWeight: '700', flexShrink: 1, color: onPressName ? colors.navy : colors.ink }}>{name}</T>
             {verified ? <VerifiedBadge /> : null}
-          </View>
+            {onPressName ? <Icon name="chevronEnd" size={15} color={colors.blue} /> : null}
+          </Pressable>
           {subtitle ? <T style={{ fontSize: 12, color: colors.muted }}>{subtitle}</T> : null}
           {rating != null ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

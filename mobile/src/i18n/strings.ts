@@ -3,7 +3,7 @@ const ar = {
   // chrome
   sub_proc: 'B2B PROCUREMENT', sub_smart: 'SMART PROCUREMENT',
   back: 'رجوع', menu: 'القائمة', notifs: 'الإشعارات', close: 'إغلاق', cancel: 'إلغاء', retry: 'إعادة المحاولة', save: 'حفظ', loading: 'جارٍ التحميل…',
-  t_home: 'الرئيسية', t_rfqs: 'المناقصات', t_orders: 'الطلبات', t_alerts: 'الإشعارات', t_more: 'المزيد', t_inbox: 'الطلبات الواردة', t_quotes: 'عروضي',
+  t_home: 'الرئيسية', t_rfqs: 'طلبات الشراء', t_orders: 'أوامر الشراء', t_alerts: 'الإشعارات', t_more: 'المزيد', t_inbox: 'طلبات التوريد', t_quotes: 'عروض الأسعار',
   t_overview: 'نظرة عامة', t_companies: 'الشركات', t_audit: 'السجل',
   // auth
   welcome_t: 'مرحباً بك في بارق', welcome_s: 'منصة المشتريات بين الشركات في عُمان: اطلب عروض الأسعار، قارن، واختر بثقة.',
@@ -147,6 +147,28 @@ const ar = {
   nk_admin_rfq_status: 'غيّر فريق بارق حالة طلبك إلى: {status}', nk_admin_order_status: 'غيّر فريق بارق حالة الطلب إلى: {status}',
   a_override: 'تغيير الحالة إدارياً', a_override_open: 'تغيير الحالة', a_override_note: 'متاح لفريق بارق فقط.',
   a_override_warn: 'ينقل الطلب إلى أي حالة خارج التسلسل المعتاد. يُبلَّغ الطرفان، ويُضاف السبب إلى سجل الطلب، ويُسجَّل التغيير في سجل التدقيق كتجاوز إداري.',
+  // design system / lists
+  search_ph: 'ابحث بالاسم أو الرقم', clear: 'مسح', err_title: 'تعذّر تحميل البيانات', self_reported: 'بيان الشركة',
+  f_all: 'الكل', f_active: 'نشطة', f_awaiting: 'بانتظار التأكيد', f_progress: 'قيد التنفيذ', f_done: 'مكتملة', f_cancelled: 'ملغاة',
+  f_open: 'مفتوحة', f_quoted: 'وصلها عرض', f_awarded: 'تمت الترسية', f_closed: 'مغلقة',
+  no_match: 'لا نتائج مطابقة', no_match_s: 'جرّب كلمة أخرى أو أزل التصفية.',
+  // terminology
+  t_purchase_requests: 'طلبات الشراء', t_supply_requests: 'طلبات التوريد', t_price_quotes: 'عروض الأسعار',
+  t_suppliers: 'الموردون', t_factories: 'المصانع', t_carriers: 'شركات الشحن', t_purchase_orders: 'أوامر الشراء',
+  t_tracking: 'تتبع الشحنات', t_settings: 'الإعدادات', t_invoices: 'الفواتير',
+  // supplier profile
+  sp_title: 'ملف المورد', sp_about: 'نبذة', sp_categories: 'فئات التوريد', sp_coverage: 'نطاق التغطية',
+  sp_history: 'السجل على بارق', sp_verified_facts: 'معلومات موثّقة من بارق', sp_claims: 'معلومات أوردها المورد',
+  sp_claims_note: 'ما يرد في هذا القسم من إدخال المورد نفسه، ولم تتحقق منه بارق.',
+  sp_orders_done: '{n} طلباً مكتملاً', sp_orders_none: 'لا طلبات مكتملة بعد على بارق',
+  sp_no_rating: 'لا يوجد نظام تقييم بعد، فلا تُعرض تقييمات.', sp_contact_hidden: 'بيانات التواصل تُكشف بعد الترسية فقط.',
+  sp_member: 'مسجَّل على بارق منذ {d}',
+  // delivery dates
+  eta_estimated: 'تاريخ تسليم متوقّع', eta_confirmed: 'تاريخ تسليم مؤكّد', eta_estimated_note: 'تقدير من المورد، وليس التزاماً مؤكّداً.',
+  // preferences
+  pref_title: 'تفضيلات العرض', pref_recommend: 'إظهار توصية «أفضل صفقة»',
+  pref_recommend_s: 'توصية تُحسب من بيانات العروض فقط، مع بيان أسبابها. القرار يبقى لك دائماً، ولا يُختار أي عرض تلقائياً.',
+  n_unread: 'غير مقروء',
 } as const;
 
 export type StringKey = keyof typeof ar;
@@ -154,7 +176,7 @@ export type StringKey = keyof typeof ar;
 const en: Record<StringKey, string> = {
   sub_proc: 'B2B PROCUREMENT', sub_smart: 'SMART PROCUREMENT',
   back: 'Back', menu: 'Menu', notifs: 'Notifications', close: 'Close', cancel: 'Cancel', retry: 'Retry', save: 'Save', loading: 'Loading…',
-  t_home: 'Home', t_rfqs: 'RFQs', t_orders: 'Orders', t_alerts: 'Alerts', t_more: 'More', t_inbox: 'Inbox', t_quotes: 'My quotes',
+  t_home: 'Home', t_rfqs: 'RFQs', t_orders: 'Purchase orders', t_alerts: 'Alerts', t_more: 'More', t_inbox: 'Supply requests', t_quotes: 'Quotations',
   t_overview: 'Overview', t_companies: 'Companies', t_audit: 'Audit',
   welcome_t: 'Welcome to BARQ', welcome_s: 'B2B procurement in Oman: request quotes, compare, and choose with confidence.',
   email: 'Email', email_ph: 'name@company.om', send_code: 'Send sign-in code', sending: 'Sending…',
@@ -283,6 +305,23 @@ const en: Record<StringKey, string> = {
   nk_admin_rfq_status: 'BARQ support changed your request status to: {status}', nk_admin_order_status: 'BARQ support changed your order status to: {status}',
   a_override: 'Admin status override', a_override_open: 'Change status', a_override_note: 'Available to BARQ support only.',
   a_override_warn: 'This moves the order to any state regardless of the normal sequence. Both parties are notified, the reason is added to the timeline, and the change is recorded in the audit log as an override.',
+  search_ph: 'Search by name or number', clear: 'Clear', err_title: 'Could not load the data', self_reported: 'Company statement',
+  f_all: 'All', f_active: 'Active', f_awaiting: 'Awaiting confirmation', f_progress: 'In progress', f_done: 'Completed', f_cancelled: 'Cancelled',
+  f_open: 'Open', f_quoted: 'Has a quote', f_awarded: 'Awarded', f_closed: 'Closed',
+  no_match: 'No matching results', no_match_s: 'Try another word or clear the filter.',
+  t_purchase_requests: 'Purchase requests', t_supply_requests: 'Supply requests', t_price_quotes: 'Quotations',
+  t_suppliers: 'Suppliers', t_factories: 'Factories', t_carriers: 'Carriers', t_purchase_orders: 'Purchase orders',
+  t_tracking: 'Shipment tracking', t_settings: 'Settings', t_invoices: 'Invoices',
+  sp_title: 'Supplier profile', sp_about: 'About', sp_categories: 'Supply categories', sp_coverage: 'Coverage',
+  sp_history: 'Record on BARQ', sp_verified_facts: 'Verified by BARQ', sp_claims: 'Stated by the supplier',
+  sp_claims_note: 'This section is entered by the supplier and has not been verified by BARQ.',
+  sp_orders_done: '{n} completed orders', sp_orders_none: 'No completed orders on BARQ yet',
+  sp_no_rating: 'There is no rating system yet, so no ratings are shown.', sp_contact_hidden: 'Contact details are released only after an award.',
+  sp_member: 'On BARQ since {d}',
+  eta_estimated: 'Estimated delivery', eta_confirmed: 'Confirmed delivery', eta_estimated_note: 'The supplier\'s estimate, not a confirmed commitment.',
+  pref_title: 'Display preferences', pref_recommend: 'Show the "best deal" recommendation',
+  pref_recommend_s: 'A recommendation computed from the quote data only, with its reasons shown. The decision is always yours and no quote is ever selected automatically.',
+  n_unread: 'Unread',
 };
 
 export type Lang = 'ar' | 'en';

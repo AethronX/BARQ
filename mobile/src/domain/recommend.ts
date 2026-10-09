@@ -51,10 +51,21 @@ export interface Recommendation {
 const WARRANTY_WORTH_MENTIONING = 12;
 const GOOD_TERMS: readonly PaymentTerms[] = ['NET_30', 'NET_60'];
 
+export interface RecommendOptions {
+  /**
+   * false turns the single recommendation off: the buyer then sees only the
+   * factual labels, the scores and the comparison. It is a display choice, so
+   * the labels are no longer suppressed on the would-be winner's card.
+   */
+  recommend?: boolean;
+}
+
 export function recommend(
   offers: readonly NormalizedOffer[],
   weights: ScoreWeights = SCORE_WEIGHTS,
+  options: RecommendOptions = {},
 ): Recommendation {
+  const withBest = options.recommend !== false;
   const { offers: scored, basis } = scoreOffers(offers, weights);
   const ranked = [...scored].sort(compareScored);
   const empty: Recommendation = { ranked, best: null, labels: {}, savings: null, basis };
@@ -72,10 +83,10 @@ export function recommend(
 
   const labels: Record<string, OfferLabel[]> = {};
   const add = (id: string, l: OfferLabel) => {
-    if (id === best.quoteId) return; // the trophy already names this card
+    if (withBest && id === best.quoteId) return; // the trophy already names this card
     (labels[id] ??= []).push(l);
   };
-  labels[best.quoteId] = ['best'];
+  if (withBest) labels[best.quoteId] = ['best'];
   // Extremes of real columns. Only the single best in each column is marked, so
   // the buyer gets three distinct alternatives rather than three copies.
   const cheapest = ranked.find((o) => o.comparableCost === minCost);
@@ -105,5 +116,5 @@ export function recommend(
     complete: basis === 'total',
   };
 
-  return { ranked, best: { offer: best, reasons }, labels, savings, basis };
+  return { ranked, best: withBest ? { offer: best, reasons } : null, labels, savings, basis };
 }

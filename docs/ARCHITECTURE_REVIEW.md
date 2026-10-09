@@ -70,3 +70,25 @@ Each dependency requires the maintenance/size/security/Expo-compat check from br
 ## 7. Review findings
 - Mockup's "reverse auction" semantics, one-tap accept, and auto-highlighting need product changes before building (see PROJECT_STATUS §2).
 - No existing code to refactor or delete; avoid scaffolding features not in `MVP_SCOPE.md`.
+
+## Design system (2026-10-09)
+
+Tokens live in `mobile/src/theme/` (colors, spacing, radii, typography,
+shadows) and are the only place a hex value appears. `src/ui/theme.ts` re-exports
+them so no screen's import had to change. `src/ui/primitives.tsx` adds the
+pieces the system was missing — SearchBar, FilterChips, StatusBadge, Skeleton,
+LoadingState, ErrorState, ListRow, Divider, Fact — and `src/ui/ListScreen.tsx`
+is the one virtualised list screen behind orders, purchase requests and the
+supplier inbox, so those four list states (loading, error, empty, no search
+match) behave identically everywhere.
+
+Icons remain the single path-based set in `src/ui/Icon.tsx`: one family, one
+stroke weight, RTL-mirrored where directional, no emoji. A Lucide package was
+not added — it would be a new dependency for an icon set the app already has
+consistently.
+
+The best-deal recommendation is an optional display preference
+(`src/prefs/PrefsProvider.tsx`). With it off the buyer still sees every factual
+label, the score breakdown and the full comparison; with it on, one explained
+suggestion appears. Neither mode selects anything: awarding stays a deliberate
+action re-checked by `award_quote()` server-side.

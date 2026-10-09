@@ -11,6 +11,7 @@ import { SCORE_WEIGHTS, type ScoreFactor, type ScoredOffer, type VerificationLev
 import { recommend, type OfferLabel } from '../../../domain/recommend';
 import { formatMoney } from '../../../domain/money';
 import { track } from '../../../analytics/events';
+import { usePrefs } from '../../../prefs/PrefsProvider';
 import {
   AppHeader, Btn, Card, Checkbox, CompanyLogo, DayRange, EmptyState, KV, Money, Note, Num, Pill, Screen, Sheet, T, Thumb, Tile, Toast, VerificationPill,
 } from '../../../ui/components';
@@ -58,6 +59,10 @@ export default function BuyerRfqDetail() {
   const now = useNow(30_000);
   const [sort, setSort] = useState<Sort>('score');
   const [sheet, setSheet] = useState<SheetState>(null);
+  // The recommendation is an optional aid: with it off the screen still shows
+  // every factual label, the score and the full comparison.
+  const { prefs } = usePrefs();
+  const showRecommendation = prefs.showRecommendation;
   const [toast, setToast] = useState<string | null>(null);
 
   const r = rfq.data;
@@ -68,10 +73,10 @@ export default function BuyerRfqDetail() {
     const byId = new Map(quotes.map((q) => [q.id, q]));
     const offers = toOffers({ quotes, stats: qq.data?.stats ?? {}, quantity: r?.quantity ?? 0 });
     const { live, setAside } = partitionOffers(offers, now);
-    const rec = recommend(live);
+    const rec = recommend(live, undefined, { recommend: showRecommendation });
     const rows: Row[] = rec.ranked.map((o) => ({ ...o, quote: byId.get(o.quoteId)!, labels: rec.labels[o.quoteId] ?? [] }));
     return { rec, rows, setAside: setAside.map((s) => ({ ...s, quote: byId.get(s.offer.quoteId)! })) };
-  }, [qq.data, r?.quantity, now]);
+  }, [qq.data, r?.quantity, now, showRecommendation]);
 
   const { rec, rows, setAside } = engine;
 
@@ -225,6 +230,7 @@ export default function BuyerRfqDetail() {
                     {isBest && rec.best ? <WhyBest reasons={rec.best.reasons} /> : null}
                   </View>
                 }
+                onPressName={() => router.push({ pathname: '/supplier-profile/[id]', params: { id: q.supplier.id } })}
                 acceptLabel={q.status === 'AWARDED' ? t('qs_AWARDED') : t('accept')}
                 acceptDisabled={!canAward}
                 onAccept={() => {

@@ -78,13 +78,19 @@ function OrderDetail() {
                 <KV
                   items={[
                     { label: t('agreed'), value: <Money amount={o.total_baisa} size={16} /> },
-                    { label: t('eta'), value: <DayRange min={data.quote.min_days} max={data.quote.max_days} size={14} /> },
+                    {
+                      label: times.DELIVERED ? t('eta_confirmed') : t('eta_estimated'),
+                      value: times.DELIVERED
+                        ? formatDate(i18n, times.DELIVERED)
+                        : <DayRange min={data.quote.min_days} max={data.quote.max_days} size={14} />,
+                    },
                     { label: t('quantity'), value: o.rfq ? `${o.rfq.quantity} ${t(o.rfq.unit as StringKey)}` : '' },
                     { label: t('location'), value: o.rfq ? t(o.rfq.location as StringKey) : '' },
                     { label: t('terms'), value: t(`pt_${data.quote.payment_terms}` as StringKey) },
                     { label: t('required_by'), value: o.rfq ? formatDate(i18n, o.rfq.required_by) : '' },
                   ]}
                 />
+                {!times.DELIVERED ? <Note text={t('eta_estimated_note')} icon="clock" /> : null}
                 <Note text={`${t('delivery_by_supplier')} · ${t('pay_v')}`} icon="truck" />
               </Card>
 

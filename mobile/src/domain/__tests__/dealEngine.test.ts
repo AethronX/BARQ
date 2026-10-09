@@ -159,3 +159,22 @@ test('supplier quality counts verification and real history, capped', () => {
   assert.equal(supplierQuality(3, 1000), 1); // cap, not an ever-growing advantage
   assert.ok(supplierQuality(3, 0) > supplierQuality(0, 10) - 0.0001);
 });
+
+test('the recommendation can be turned off without losing the factual labels', () => {
+  const offers = [
+    offer({ quoteId: 'cheap', goodsTotal: 90_000, maxDays: 9 }),
+    offer({ quoteId: 'fast', goodsTotal: 150_000, maxDays: 2 }),
+  ];
+  const on = recommend(offers);
+  assert.ok(on.best, 'a recommendation is made by default');
+
+  const off = recommend(offers, SCORE_WEIGHTS, { recommend: false });
+  assert.equal(off.best, null);
+  assert.ok(!Object.values(off.labels).flat().includes('best'));
+  // the extremes are still named, including on the card that would have won
+  assert.deepEqual(off.labels['cheap'], ['cheapest']);
+  assert.deepEqual(off.labels['fast'], ['fastest']);
+  // and the comparison itself is unchanged
+  assert.deepEqual(off.ranked.map((o) => o.quoteId), on.ranked.map((o) => o.quoteId));
+  assert.deepEqual(off.savings, on.savings);
+});

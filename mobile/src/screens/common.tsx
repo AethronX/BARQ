@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import Constants from 'expo-constants';
 import { useI18n } from '../i18n/I18nProvider';
@@ -12,9 +12,12 @@ import { AppHeader, Btn, Card, CompanyLogo, EmptyState, Money, Num, Pill, Screen
 import { Icon, type IconName } from '../ui/Icon';
 import { formatDate, formatStamp, isToday, notifText } from '../ui/format';
 import { QueryState } from '../ui/states';
+import { ListScreen } from '../ui/ListScreen';
+import { useSearch, type FilterOption } from '../ui/primitives';
 import { colors } from '../ui/theme';
 import { homeFor, routeForLink } from './RoleGate';
 import { DEMO_MODE } from '../auth/demo';
+import { usePrefs } from '../prefs/PrefsProvider';
 
 /** Header with the role's notification bell wired up. */
 export function RoleHeader(props: Omit<ComponentProps<typeof AppHeader>, 'onBell' | 'unread'>) {
@@ -74,37 +77,58 @@ export function AlertsScreen() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasUnread]),
   );
+  // Unread first, then newest. The server already orders by date.
+  const rows = [...(q.data ?? [])].sort((a, b) => Number(!!a.read_at) - Number(!!b.read_at));
+
   return (
-    <Screen header={<AppHeader title={t('t_alerts')} />} onRefresh={() => q.refetch()} refreshing={q.isRefetching}>
-      <QueryState isPending={q.isPending} error={q.error} onRetry={() => q.refetch()} isEmpty={!q.data?.length} empty={<EmptyState icon="bell" title={t('n_none')} />}>
-        <Card style={{ paddingHorizontal: 16 }}>
-          {q.data?.map((n, i) => {
-            const look = KIND_LOOK[n.kind] ?? { icon: 'info' as IconName, bg: colors.tile, fg: colors.ink2 };
-            const target = profile ? routeForLink(profile.role, n.link) : null;
-            return (
-              <Pressable
-                key={n.id}
-                disabled={!target}
-                onPress={() => target && router.push(target as Href)}
-                accessibilityRole={target ? 'button' : undefined}
-                style={[{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 }, i < q.data!.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.line }]}
-              >
-                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: look.bg, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name={look.icon} size={21} color={look.fg} />
-                </View>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <T style={{ fontSize: 13.5, fontWeight: n.read_at ? '500' : '700' }}>{notifText(i18n, n)}</T>
-                  <T style={{ fontSize: 11.5, color: colors.muted }}>{isToday(n.created_at) ? t('today') : formatDate(i18n, n.created_at)} · {formatStamp(i18n, n.created_at).split(' ').slice(-2).join(' ')}</T>
-                </View>
-                {!n.read_at ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.amber }} /> : null}
-              </Pressable>
-            );
-          })}
-        </Card>
-      </QueryState>
-    </Screen>
+    <ListScreen
+      header={<AppHeader title={t('t_alerts')} />}
+      data={rows}
+      keyExtractor={(n) => n.id}
+      searchable={false}
+      isPending={q.isPending}
+      error={q.error}
+      onRetry={() => q.refetch()}
+      onRefresh={() => q.refetch()}
+      refreshing={q.isRefetching}
+      empty={{ icon: 'bell', title: t('n_none') }}
+      renderItem={(n) => {
+        const look = KIND_LOOK[n.kind] ?? { icon: 'info' as IconName, bg: colors.tile, fg: colors.ink2 };
+        const target = profile ? routeForLink(profile.role, n.link) : null;
+        return (
+          <Card style={{ paddingHorizontal: 16 }}>
+            <Pressable
+              disabled={!target}
+              onPress={() => target && router.push(target as Href)}
+              accessibilityRole={target ? 'button' : undefined}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, minHeight: 56 }}
+            >
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: look.bg, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={look.icon} size={21} color={look.fg} />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <T style={{ fontSize: 13.5, fontWeight: n.read_at ? '500' : '700' }}>{notifText(i18n, n)}</T>
+                <T style={{ fontSize: 11.5, color: colors.muted }}>
+                  {isToday(n.created_at) ? t('today') : formatDate(i18n, n.created_at)} · {formatStamp(i18n, n.created_at).split(' ').slice(-2).join(' ')}
+                </T>
+              </View>
+              {!n.read_at ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.amber }} accessibilityLabel={t('n_unread')} /> : null}
+            </Pressable>
+          </Card>
+        );
+      }}
+    />
   );
 }
+
+/** Order groups the buyer and supplier actually think in. */
+type OrderFilter = 'all' | 'awaiting' | 'progress' | 'done' | 'cancelled';
+const ORDER_GROUP: Record<Exclude<OrderFilter, 'all'>, OrderStatus[]> = {
+  awaiting: ['PENDING', 'CONFIRMED'],
+  progress: ['PROCESSING', 'READY_FOR_SHIPMENT', 'SHIPPED', 'DELIVERED'],
+  done: ['COMPLETED'],
+  cancelled: ['CANCELLED'],
+};
 
 export function OrdersScreen() {
   const i18n = useI18n();
@@ -112,36 +136,60 @@ export function OrdersScreen() {
   const { profile } = useAuth();
   const q = useOrders();
   const isBuyer = profile?.role === 'buyer';
+  const [filter, setFilter] = useState<OrderFilter>('all');
+
+  const all = q.data ?? [];
+  const counts: Record<OrderFilter, number> = {
+    all: all.length,
+    awaiting: all.filter((o) => ORDER_GROUP.awaiting.includes(o.status)).length,
+    progress: all.filter((o) => ORDER_GROUP.progress.includes(o.status)).length,
+    done: all.filter((o) => ORDER_GROUP.done.includes(o.status)).length,
+    cancelled: all.filter((o) => ORDER_GROUP.cancelled.includes(o.status)).length,
+  };
+  const byFilter = filter === 'all' ? all : all.filter((o) => ORDER_GROUP[filter].includes(o.status));
+  const { query, setQuery, result } = useSearch(byFilter, (o) => [o.rfq?.title, o.number, isBuyer ? o.supplier?.name : o.buyer?.name]);
+
+  const filters: FilterOption<OrderFilter>[] = [
+    { key: 'all', label: t('f_all'), count: counts.all },
+    { key: 'awaiting', label: t('f_awaiting'), count: counts.awaiting },
+    { key: 'progress', label: t('f_progress'), count: counts.progress },
+    { key: 'done', label: t('f_done'), count: counts.done },
+    ...(counts.cancelled ? [{ key: 'cancelled' as const, label: t('f_cancelled'), count: counts.cancelled }] : []),
+  ];
+
   return (
-    <Screen header={<RoleHeader title={t('t_orders')} />} onRefresh={() => q.refetch()} refreshing={q.isRefetching}>
-      <QueryState
-        isPending={q.isPending}
-        error={q.error}
-        onRetry={() => q.refetch()}
-        isEmpty={!q.data?.length}
-        empty={<EmptyState icon="list" title={t('orders_empty')} body={isBuyer ? t('orders_empty_buyer') : t('orders_empty_supplier')} />}
-      >
-        {q.data?.map((o) => {
-          const party = isBuyer ? o.supplier?.name : o.buyer?.name;
-          return (
-            <Pressable key={o.id} onPress={() => router.push({ pathname: '/order/[id]', params: { id: o.id } })} accessibilityRole="button">
-              <Card style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                {o.rfq ? <Thumb category={o.rfq.category} size={56} /> : null}
-                <View style={{ flex: 1, gap: 3 }}>
-                  <T style={{ fontWeight: '700' }} numberOfLines={1}>{o.rfq?.title ?? ''}</T>
-                  <T style={{ fontSize: 12, color: colors.muted }} numberOfLines={1}>{party ?? ''}</T>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <OrderStatusPill status={o.status} />
-                    <Num style={{ fontSize: 12, color: colors.muted }}>{`#${o.number}`}</Num>
-                  </View>
-                </View>
-                <Money amount={o.total_baisa} size={15} compact />
-              </Card>
-            </Pressable>
-          );
-        })}
-      </QueryState>
-    </Screen>
+    <ListScreen
+      header={<RoleHeader title={t('t_orders')} />}
+      data={result}
+      keyExtractor={(o) => o.id}
+      query={query}
+      onQuery={setQuery}
+      filters={filters}
+      filter={filter}
+      onFilter={setFilter}
+      isPending={q.isPending}
+      error={q.error}
+      onRetry={() => q.refetch()}
+      onRefresh={() => q.refetch()}
+      refreshing={q.isRefetching}
+      empty={{ icon: 'list', title: t('orders_empty'), body: isBuyer ? t('orders_empty_buyer') : t('orders_empty_supplier') }}
+      renderItem={(o) => (
+        <Pressable onPress={() => router.push({ pathname: '/order/[id]', params: { id: o.id } })} accessibilityRole="button" accessibilityLabel={o.rfq?.title ?? ''}>
+          <Card style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {o.rfq ? <Thumb category={o.rfq.category} size={56} /> : null}
+            <View style={{ flex: 1, gap: 3 }}>
+              <T style={{ fontWeight: '700' }} numberOfLines={1}>{o.rfq?.title ?? ''}</T>
+              <T style={{ fontSize: 12, color: colors.muted }} numberOfLines={1}>{(isBuyer ? o.supplier?.name : o.buyer?.name) ?? ''}</T>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <OrderStatusPill status={o.status} />
+                <Num style={{ fontSize: 12, color: colors.muted }}>{`#${o.number}`}</Num>
+              </View>
+            </View>
+            <Money amount={o.total_baisa} size={15} compact />
+          </Card>
+        </Pressable>
+      )}
+    />
   );
 }
 
@@ -164,6 +212,7 @@ export function MoreScreen() {
   const { t, lang, setLang } = i18n;
   const { profile, company, signOut } = useAuth();
   const del = useRequestDeletion();
+  const { prefs, setPref } = usePrefs();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
@@ -194,6 +243,23 @@ export function MoreScreen() {
             <Row icon="users" label={t('a_users')} sub={t('a_role_note')} onPress={() => router.push('/admin/users')} last />
           </Card>
         ) : null}
+        <Card style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+          <Row
+            icon="sliders"
+            label={t('pref_recommend')}
+            sub={t('pref_recommend_s')}
+            right={
+              <Switch
+                value={prefs.showRecommendation}
+                onValueChange={(v) => setPref('showRecommendation', v)}
+                trackColor={{ true: colors.amber, false: colors.line }}
+                thumbColor={colors.white}
+                accessibilityLabel={t('pref_recommend')}
+              />
+            }
+            last
+          />
+        </Card>
         <Card style={{ paddingHorizontal: 16 }}>
           <Row icon="globe" label={t('lang')} right={<View style={{ flexDirection: 'row', borderWidth: 1, borderColor: colors.line, borderRadius: 12, padding: 3, direction: 'ltr' }}>{[seg('ar', 'العربية'), seg('en', 'English')]}</View>} />
           <Row icon="help" label={t('help')} sub={t('help_v')} />

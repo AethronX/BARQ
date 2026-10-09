@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { PrefsProvider } from '../prefs/PrefsProvider';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { AppState, Platform } from 'react-native';
@@ -27,10 +28,12 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={client}>
         <I18nProvider>
-          <AuthProvider>
-            <StatusBar style="light" />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
-          </AuthProvider>
+          <PrefsProvider>
+            <AuthProvider>
+              <StatusBar style="light" />
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+            </AuthProvider>
+          </PrefsProvider>
         </I18nProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
