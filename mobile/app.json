@@ -47,6 +47,11 @@
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
-    "backgroundColor": "#F8FAFC"
+    "backgroundColor": "#F8FAFC",
+    "extra": {
+      "eas": {
+        "projectId": "0250e318-0e08-4bc0-9f72-5a1bbc08c2a8"
+      }
+    }
   }
 }
